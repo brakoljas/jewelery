@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ювелирное дело — трекер</title>
+
+<style>
+:root{
+  --bg:#0f1115;
+  --panel:#171a22;
+  --panel2:#1f2430;
+  --line:#2a3040;
+  --text:#e7e8ee;
+  --muted:#9aa2b6;
+  --accent:#6ccfff;
+  --danger:#ff6b6b;
+  --ok:#5fd38d;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:#0c0e13;border-bottom:1px solid #1f2430
+}
+header .title{font-weight:700}
+header .status{font-size:12px;color:var(--muted)}
+main{padding:12px;max-width:1100px;margin:0 auto}
+
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.tab{
+  padding:7px 10px;border:1px solid var(--line);border-radius:10px;
+  background:var(--panel);color:var(--muted);cursor:pointer;font-size:13px
+}
+.tab.active{background:var(--panel2);color:var(--text);border-color:#3a4258}
+
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.spacer{flex:1}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;
+  box-shadow:var(--shadow)
+}
+.card h3{margin:0 0 6px 0;font-size:14px}
+.small{font-size:12px;color:var(--muted);line-height:1.35}
+.bad{color:var(--danger)}
+.good{color:var(--ok)}
+
+button{
+  background:var(--panel2);color:var(--text);
+  border:1px solid var(--line);border-radius:10px;padding:8px 10px;
+  cursor:pointer;font-size:13px
+}
+button:hover{border-color:var(--accent)}
+button.primary{background:#24344c;border-color:#36506f}
+button.danger{border-color:#5b2a2a;color:#ffd1d1}
+button:disabled{opacity:.55;cursor:not-allowed}
+
+input,select,textarea{
+  width:100%;background:#0f1320;color:var(--text);
+  border:1px solid var(--line);border-radius:10px;padding:8px;font-size:13px
+}
+label{display:block;margin:10px 0 6px;font-size:12px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--line);margin:12px 0}
+
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row > *{flex:1;min-width:220px}
+
+.hidden{display:none !important}
+
+/* modal */
+.modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;padding:16px;
+  z-index:999;
+}
+.modal.hidden{display:none !important}
+.modal .box{
+  width:min(920px,100%);max-height:90vh;overflow:auto;
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:16px;box-shadow:var(--shadow);padding:14px;
+}
+.modal .head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.modal .head h2{margin:0;font-size:16px}
+.pill{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:4px 8px;border-radius:999px}
+
+.table{
+  display:grid;gap:8px;
+}
+.tableRow{
+  display:grid;grid-template-columns: 1.6fr .6fr .6fr .4fr;
+  gap:8px;align-items:center;
+}
+.tableRow > *{min-width:0}
+.tableRow .x{width:auto}
+@media (max-width:840px){
+  .tableRow{grid-template-columns:1fr 1fr}
+  .tableRow .x{grid-column:2/3}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="title">Ювелирное дело — трекер</div>
+  <div class="status" id="status">Загрузка данных…</div>
+</header>
+
+<main>
+  <div class="tabs">
+    <div class="tab active" data-tab="gems">Самоцветы</div>
+    <div class="tab" data-tab="aspects">Аспекты</div>
+    <div class="tab" data-tab="inventory">Инвентарь</div>
+    <div class="tab" data-tab="craft">Крафт</div>
+    <div class="tab" data-tab="journal">Журнал изделий</div>
+    <div class="tab" data-tab="io">Экспорт / Импорт</div>
+  </div>
+
+  <!-- Самоцветы -->
+  <section id="tab-gems">
+    <div class="toolbar">
+      <input id="gemsSearch" placeholder="Поиск по самоцветам…" />
+      <button onclick="openGemEditor()">Добавить самоцвет</button>
+      <div class="spacer"></div>
+    </div>
+    <div class="grid" id="gemsGrid"></div>
+  </section>
+
+  <!-- Аспекты -->
+  <section id="tab-aspects" class="hidden">
+    <div class="toolbar">
+      <input id="aspectsSearch" placeholder="Поиск по аспектам…" />
+      <button onclick="openAspectEditor()">Добавить аспект</button>
+      <div class="spacer"></div>
+    </div>
+    <div class="grid" id="aspectsGrid"></div>
+  </section>
+
+  <!-- Инвентарь -->
+  <section id="tab-inventory" class="hidden">
+    <div class="row">
+      <div class="card">
+        <h3>Самоцветы</h3>
+        <div class="small">Количество по каждому камню. Кастомные камни появляются автоматически.</div>
+        <hr>
+        <div class="grid" id="invGems"></div>
+      </div>
+      <div class="card">
+        <h3>Материалы</h3>
+        <div class="small">Единицы/слитки материалов. Списываются по смете при крафте.</div>
+        <hr>
+        <div class="grid" id="invMaterials"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Крафт -->
+  <section id="tab-craft" class="hidden">
+    <div class="card">
+      <h3>Крафт</h3>
+      <div class="small">Открой конструктор и собери изделие: база + смета материалов + (самоцветы ИЛИ аспекты).</div>
+      <div class="toolbar">
+        <button id="craftOpenBtn" class="primary" onclick="openCraft()" disabled>Создать изделие</button>
+        <div class="spacer"></div>
+        <div class="pill" id="craftHint">данные ещё грузятся</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Журнал -->
+  <section id="tab-journal" class="hidden">
+    <div class="toolbar">
+      <button class="danger" onclick="clearJournal()">Очистить журнал</button>
+      <div class="spacer"></div>
+    </div>
+    <div class="grid" id="journalGrid"></div>
+  </section>
+
+  <!-- IO -->
+  <section id="tab-io" class="hidden">
+    <div class="card">
+      <h3>Экспорт / Импорт</h3>
+      <div class="small">Экспорт — копирует состояние в буфер. Импорт — заменяет текущее состояние.</div>
+      <div class="toolbar">
+        <button onclick="exportState()">Скопировать JSON</button>
+        <button class="danger" onclick="resetState()">Сбросить состояние</button>
+      </div>
+      <label>Импорт JSON</label>
+      <textarea id="importBox" rows="10" placeholder="Вставь сюда JSON…"></textarea>
+      <div class="toolbar">
+        <button class="primary" onclick="importState()">Импорт</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Craft Modal -->
+<div id="craftModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="box">
+    <div class="head">
+      <h2>Конструктор крафта</h2>
+      <div class="row" style="gap:8px;align-items:center">
+        <span class="pill" id="craftLiveStatus">проверка…</span>
+        <button onclick="closeCraft()">Закрыть</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Название</label>
+        <input id="craftName" placeholder="Например: Кольцо ясности" />
+      </div>
+      <div>
+        <label>Тип изделия</label>
+        <select id="craftType"></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Основной материал оправы (даёт множитель цены)</label>
+        <select id="craftPrimaryMaterial"></select>
+      </div>
+      <div>
+        <label>Режим наполнения</label>
+        <select id="craftMode">
+          <option value="gems">Самоцветы</option>
+          <option value="aspects">Аспекты</option>
+        </select>
+      </div>
+    </div>
+
+    <hr>
+
+    <h3 style="margin:0 0 6px 0;font-size:14px">Смета материалов</h3>
+    <div class="small">Материалы списываются из инвентаря при крафте.</div>
+    <div class="toolbar">
+      <button onclick="addMatRow()">Добавить материал</button>
+      <div class="spacer"></div>
+    </div>
+    <div id="matRows" class="table"></div>
+
+    <hr>
+
+    <div id="modeGems">
+      <h3 style="margin:0 0 6px 0;font-size:14px">Самоцветы</h3>
+      <div class="small">Выбери камни и количество. Время = сумма времени по каждому камню.</div>
+      <div class="toolbar">
+        <button onclick="addGemRow()">Добавить самоцвет</button>
+        <div class="spacer"></div>
+      </div>
+      <div id="gemRows" class="table"></div>
+    </div>
+
+    <div id="modeAspects" class="hidden">
+      <h3 style="margin:0 0 6px 0;font-size:14px">Аспекты</h3>
+      <div class="small">
+        Для каждого аспекта выбери камень-носитель и сколько камней вкладываешь.
+        Система проверит <b>stonesPerAspect</b> и наличие в инвентаре.
+      </div>
+      <div class="toolbar">
+        <button onclick="addAspectRow()">Добавить аспект</button>
+        <div class="spacer"></div>
+      </div>
+      <div id="aspectRows" class="table"></div>
+    </div>
+
+    <hr>
+
+    <div class="card" style="box-shadow:none">
+      <h3 style="margin:0 0 6px 0;font-size:14px">Итоги</h3>
+      <div class="small" id="craftSummary">—</div>
+    </div>
+
+    <div class="toolbar">
+      <button id="craftConfirmBtn" class="primary" onclick="confirmCraft()">Скрафтить</button>
+      <div class="spacer"></div>
+      <button class="danger" onclick="closeCraft()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- Simple editor modals (минимум) -->
+<div id="simpleModal" class="modal hidden">
+  <div class="box">
+    <div class="head">
+      <h2 id="simpleTitle">Редактор</h2>
+      <button onclick="closeSimple()">Закрыть</button>
+    </div>
+    <div id="simpleBody"></div>
+    <div class="toolbar">
+      <button class="primary" id="simpleSaveBtn">Сохранить</button>
+      <div class="spacer"></div>
+      <button class="danger hidden" id="simpleDeleteBtn">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BUILTIN_URL = "data/jewelry_builtin.json";
+const SAVE_KEY = "jewelry_state_jewel_v1";
+
+let builtin = null;
+let state = null;
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s??"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m])); }
+
+function nowIso(){ return new Date().toISOString(); }
+function uid(prefix="id"){ return prefix+"_"+Math.random().toString(16).slice(2)+Date.now().toString(16); }
+
+/* ---------- load + state ---------- */
+async function init(){
+  try{
+    setStatus("Загрузка базовых данных…");
+    const res = await fetch(BUILTIN_URL, { cache:"no-store" });
+    if(!res.ok) throw new Error("Не удалось загрузить jewelry_builtin.json");
+    builtin = await res.json();
+  }catch(e){
+    console.error(e);
+    setStatus("Ошибка загрузки данных. Проверь data/jewelry_builtin.json и запуск через сервер.", true);
+    return;
+  }
+
+  state = loadState();
+  normalizeState();
+  wireUI();
+  renderAll();
+
+  $("craftOpenBtn").disabled = false;
+  $("craftHint").textContent = "данные загружены";
+  setStatus("Готово");
+}
+
+function setStatus(text, isBad=false){
+  const el = $("status");
+  el.textContent = text;
+  el.style.color = isBad ? "var(--danger)" : "var(--muted)";
+}
+
+function loadState(){
+  const raw = localStorage.getItem(SAVE_KEY);
+  if(raw){
+    try { return JSON.parse(raw); } catch {}
+  }
+  return {
+    saveVersion:"1.0",
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+    custom:{ gems:[], aspects:[] },
+    inventory:{ gems:{}, materials:{} },
+    journal:[]
+  };
+}
+
+function saveState(){
+  state.updatedAt = nowIso();
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+}
+
+/* ---------- data access ---------- */
+function allGems(){ return [...(builtin?.catalog?.gems||[]), ...(state?.custom?.gems||[])]; }
+function allAspects(){ return [...(builtin?.catalog?.aspects||[]), ...(state?.custom?.aspects||[])]; }
+function allMaterials(){ return [...(builtin?.materials?.metals||[]), ...(builtin?.materials?.others||[])]; }
+function tiersByGp(){
+  const map = new Map();
+  (builtin?.tiers||[]).forEach(t=>map.set(t.tierGp, t));
+  return map;
+}
+
+function normalizeState(){
+  state.custom ??= {gems:[],aspects:[]};
+  state.inventory ??= {gems:{},materials:{}};
+  state.inventory.gems ??= {};
+  state.inventory.materials ??= {};
+  state.journal ??= [];
+
+  // ensure inventory keys exist for all builtins + customs
+  for(const g of allGems()) if(state.inventory.gems[g.id]==null) state.inventory.gems[g.id]=0;
+  for(const m of allMaterials()) if(state.inventory.materials[m.id]==null) state.inventory.materials[m.id]=0;
+
+  saveState();
+}
+
+/* ---------- tabs ---------- */
+function wireUI(){
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      const name = tab.dataset.tab;
+      document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+      $("tab-"+name).classList.remove("hidden");
+    });
+  });
+
+  $("gemsSearch").addEventListener("input", renderGems);
+  $("aspectsSearch").addEventListener("input", renderAspects);
+
+  // modal close interactions
+  $("craftModal").addEventListener("click", (e)=>{ if(e.target.id==="craftModal") closeCraft(); });
+  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ closeCraft(); closeSimple(); } });
+
+  $("craftMode").addEventListener("change", ()=>{
+    const mode = $("craftMode").value;
+    $("modeGems").classList.toggle("hidden", mode!=="gems");
+    $("modeAspects").classList.toggle("hidden", mode!=="aspects");
+    recomputeCraft();
+  });
+}
+
+/* ---------- render каталоги ---------- */
+function renderAll(){
+  renderGems();
+  renderAspects();
+  renderInventory();
+  renderJournal();
+}
+
+function renderGems(){
+  const q = ($("gemsSearch").value||"").trim().toLowerCase();
+  const grid = $("gemsGrid");
+  const list = allGems()
+    .filter(g=>!q || g.name.toLowerCase().includes(q) || String(g.tierGp).includes(q))
+    .sort((a,b)=> (a.tierGp-b.tierGp) || a.name.localeCompare(b.name,"ru"));
+
+  grid.innerHTML = list.map(g=>`
+    <div class="card">
+      <h3>${esc(g.name)}</h3>
+      <div class="small">Категория: <b>${esc(g.category||(`${g.tierGp} зм`))}</b></div>
+      <div class="small">Tier: ${g.tierGp} зм · Камней на аспект: ${g.stonesPerAspect} · Лимит аспектов: ${g.aspectSlotsInItem ?? "—"}</div>
+      <div class="small">${esc(g.rulesText||"")}</div>
+      <div class="toolbar">
+        ${isCustomGem(g.id) ? `<button onclick="openGemEditor('${esc(g.id)}')">Редактировать</button>` : `<span class="pill">встроенный</span>`}
+        <div class="spacer"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderAspects(){
+  const q = ($("aspectsSearch").value||"").trim().toLowerCase();
+  const grid = $("aspectsGrid");
+  const list = allAspects()
+    .filter(a=>!q || a.name.toLowerCase().includes(q) || (a.category||"").toLowerCase().includes(q))
+    .sort((a,b)=> (a.category||"").localeCompare(b.category||"","ru") || a.name.localeCompare(b.name,"ru"));
+
+  grid.innerHTML = list.map(a=>`
+    <div class="card">
+      <h3>${esc(a.name)}</h3>
+      <div class="small">Категория: <b>${esc(a.category||"—")}</b></div>
+      <div class="small">${esc(a.rulesText||"")}</div>
+      <div class="toolbar">
+        ${isCustomAspect(a.id) ? `<button onclick="openAspectEditor('${esc(a.id)}')">Редактировать</button>` : `<span class="pill">встроенный</span>`}
+        <div class="spacer"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ---------- inventory ---------- */
+function renderInventory(){
+  // gems
+  const gWrap = $("invGems");
+  const gems = allGems().sort((a,b)=> (a.tierGp-b.tierGp) || a.name.localeCompare(b.name,"ru"));
+  gWrap.innerHTML = gems.map(g=>`
+    <div class="card" style="box-shadow:none">
+      <h3>${esc(g.name)}</h3>
+      <div class="small">${g.tierGp} зм</div>
+      <label>Количество</label>
+      <input type="number" min="0" value="${state.inventory.gems[g.id]||0}" data-inv-gem="${esc(g.id)}"/>
+    </div>
+  `).join("");
+  gWrap.querySelectorAll("[data-inv-gem]").forEach(inp=>{
+    inp.addEventListener("change", ()=>{
+      const id = inp.dataset.invGem;
+      state.inventory.gems[id] = Math.max(0, +inp.value||0);
+      saveState();
+      recomputeCraft();
+    });
+  });
+
+  // materials
+  const mWrap = $("invMaterials");
+  const mats = allMaterials().sort((a,b)=> a.name.localeCompare(b.name,"ru"));
+  mWrap.innerHTML = mats.map(m=>`
+    <div class="card" style="box-shadow:none">
+      <h3>${esc(m.name)}</h3>
+      <div class="small">Сложность: ${m.workDC} · Цена ед.: ${formatCoins(m.unitCost)} (${m.unitCostGp} зм)</div>
+      <label>Количество единиц</label>
+      <input type="number" min="0" value="${state.inventory.materials[m.id]||0}" data-inv-mat="${esc(m.id)}"/>
+    </div>
+  `).join("");
+  mWrap.querySelectorAll("[data-inv-mat]").forEach(inp=>{
+    inp.addEventListener("change", ()=>{
+      const id = inp.dataset.invMat;
+      state.inventory.materials[id] = Math.max(0, +inp.value||0);
+      saveState();
+      recomputeCraft();
+    });
+  });
+}
+
+/* ---------- journal ---------- */
+function renderJournal(){
+  const grid = $("journalGrid");
+  const list = [...state.journal].sort((a,b)=> (b.createdAt||"").localeCompare(a.createdAt||""));
+  if(list.length===0){
+    grid.innerHTML = `<div class="card"><h3>Пусто</h3><div class="small">Скрафти что-нибудь — появится запись.</div></div>`;
+    return;
+  }
+  grid.innerHTML = list.map(it=>`
+    <div class="card">
+      <h3>${esc(it.name)}</h3>
+      <div class="small">${esc(it.typeName)} · ${esc(it.primaryMaterialName)}</div>
+      <div class="small">
+        Цена: <b>${it.finalPriceGp.toFixed(2)} зм</b> ·
+        Время: <b>${formatTime(it.craftTimeMin)}</b> ·
+        Сл: <b>${it.workDC}</b>
+      </div>
+      <div class="small">
+        Материалы: ${esc(it.materialsBillText)}<br>
+        Камни: ${esc(it.gemsText)}<br>
+        Аспекты: ${esc(it.aspectsText)}
+      </div>
+      <div class="toolbar">
+        <button class="danger" onclick="deleteJournal('${esc(it.id)}')">Удалить</button>
+        <div class="spacer"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function deleteJournal(id){
+  state.journal = state.journal.filter(x=>x.id!==id);
+  saveState();
+  renderJournal();
+}
+function clearJournal(){
+  if(!confirm("Очистить журнал изделий?")) return;
+  state.journal = [];
+  saveState();
+  renderJournal();
+}
+
+/* ---------- craft modal ---------- */
+let craftDraft = null;
+
+function openCraft(){
+  if(!builtin) return;
+
+  craftDraft = {
+    id: uid("craft"),
+    name: "",
+    typeId: builtin.jewelryTypes?.[0]?.id || "",
+    primaryMaterialId: allMaterials()[0]?.id || "",
+    materialsBill: [],   // {materialId, qty}
+    mode: "gems",
+    gems: [],            // {gemId, qty}
+    aspects: []          // {aspectId, carrierGemId, embeddedStonesQty}
+  };
+
+  // fill selects
+  $("craftType").innerHTML = (builtin.jewelryTypes||[]).map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("");
+  $("craftPrimaryMaterial").innerHTML = allMaterials().map(m=>`<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("");
+
+  $("craftName").value = "";
+  $("craftMode").value = "gems";
+
+  $("craftModal").classList.remove("hidden");
+  $("modeGems").classList.remove("hidden");
+  $("modeAspects").classList.add("hidden");
+
+  // wire
+  $("craftType").onchange = ()=>{ craftDraft.typeId = $("craftType").value; recomputeCraft(); };
+  $("craftPrimaryMaterial").onchange = ()=>{ craftDraft.primaryMaterialId = $("craftPrimaryMaterial").value; recomputeCraft(); };
+  $("craftName").oninput = ()=>{ craftDraft.name = $("craftName").value; };
+
+  // start with 1 row each for convenience
+  $("matRows").innerHTML = "";
+  $("gemRows").innerHTML = "";
+  $("aspectRows").innerHTML = "";
+  addMatRow();
+  addGemRow();
+
+  recomputeCraft();
+}
+
+function closeCraft(){
+  $("craftModal").classList.add("hidden");
+  craftDraft = null;
+}
+
+function addMatRow(){
+  if(!craftDraft) return;
+  craftDraft.materialsBill.push({ materialId: allMaterials()[0]?.id || "", qty: 1 });
+  renderMatRows();
+  recomputeCraft();
+}
+function removeMatRow(idx){
+  craftDraft.materialsBill.splice(idx,1);
+  renderMatRows();
+  recomputeCraft();
+}
+function renderMatRows(){
+  const wrap = $("matRows");
+  const mats = allMaterials();
+  wrap.innerHTML = craftDraft.materialsBill.map((r,idx)=>`
+    <div class="tableRow">
+      <select data-mat-id="${idx}">
+        ${mats.map(m=>`<option value="${esc(m.id)}" ${m.id===r.materialId?"selected":""}>${esc(m.name)}</option>`).join("")}
+      </select>
+      <input type="number" min="0" step="1" value="${r.qty}" data-mat-qty="${idx}"/>
+      <div class="small">${invMatText(r.materialId)}</div>
+      <button class="x danger" onclick="removeMatRow(${idx})">✕</button>
+    </div>
+  `).join("");
+  wrap.querySelectorAll("[data-mat-id]").forEach(sel=>{
+    sel.addEventListener("change", ()=>{
+      const idx = +sel.dataset.matId;
+      craftDraft.materialsBill[idx].materialId = sel.value;
+      recomputeCraft();
+      renderMatRows();
+    });
+  });
+  wrap.querySelectorAll("[data-mat-qty]").forEach(inp=>{
+    inp.addEventListener("input", ()=>{
+      const idx = +inp.dataset.matQty;
+      craftDraft.materialsBill[idx].qty = Math.max(0, Math.floor(+inp.value||0));
+      recomputeCraft();
+      renderMatRows();
+    });
+  });
+}
+
+function addGemRow(){
+  if(!craftDraft) return;
+  craftDraft.gems.push({ gemId: allGems()[0]?.id || "", qty: 1 });
+  renderGemRows();
+  recomputeCraft();
+}
+function removeGemRow(idx){
+  craftDraft.gems.splice(idx,1);
+  renderGemRows();
+  recomputeCraft();
+}
+function renderGemRows(){
+  const wrap = $("gemRows");
+  const gems = allGems().sort((a,b)=> (a.tierGp-b.tierGp) || a.name.localeCompare(b.name,"ru"));
+  wrap.innerHTML = craftDraft.gems.map((r,idx)=>`
+    <div class="tableRow">
+      <select data-gem-id="${idx}">
+        ${gems.map(g=>`<option value="${esc(g.id)}" ${g.id===r.gemId?"selected":""}>${esc(g.name)} (${g.tierGp}зм)</option>`).join("")}
+      </select>
+      <input type="number" min="0" step="1" value="${r.qty}" data-gem-qty="${idx}"/>
+      <div class="small">${invGemText(r.gemId)}</div>
+      <button class="x danger" onclick="removeGemRow(${idx})">✕</button>
+    </div>
+  `).join("");
+  wrap.querySelectorAll("[data-gem-id]").forEach(sel=>{
+    sel.addEventListener("change", ()=>{
+      const idx = +sel.dataset.gemId;
+      craftDraft.gems[idx].gemId = sel.value;
+      renderGemRows();
+      recomputeCraft();
+    });
+  });
+  wrap.querySelectorAll("[data-gem-qty]").forEach(inp=>{
+    inp.addEventListener("input", ()=>{
+      const idx = +inp.dataset.gemQty;
+      craftDraft.gems[idx].qty = Math.max(0, Math.floor(+inp.value||0));
+      recomputeCraft();
+      renderGemRows();
+    });
+  });
+}
+
+function addAspectRow(){
+  if(!craftDraft) return;
+  craftDraft.aspects.push({ aspectId: allAspects()[0]?.id || "", carrierGemId: allGems()[0]?.id || "", embeddedStonesQty: 1 });
+  renderAspectRows();
+  recomputeCraft();
+}
+function removeAspectRow(idx){
+  craftDraft.aspects.splice(idx,1);
+  renderAspectRows();
+  recomputeCraft();
+}
+function renderAspectRows(){
+  const wrap = $("aspectRows");
+  const aspects = allAspects().sort((a,b)=> (a.category||"").localeCompare(b.category||"","ru") || a.name.localeCompare(b.name,"ru"));
+  const gems = allGems().sort((a,b)=> (a.tierGp-b.tierGp) || a.name.localeCompare(b.name,"ru"));
+
+  wrap.innerHTML = craftDraft.aspects.map((r,idx)=>`
+    <div class="tableRow">
+      <select data-asp-id="${idx}">
+        ${aspects.map(a=>`<option value="${esc(a.id)}" ${a.id===r.aspectId?"selected":""}>${esc(a.name)}</option>`).join("")}
+      </select>
+      <select data-asp-gem="${idx}">
+        ${gems.map(g=>`<option value="${esc(g.id)}" ${g.id===r.carrierGemId?"selected":""}>${esc(g.name)} (${g.tierGp}зм)</option>`).join("")}
+      </select>
+      <input type="number" min="0" step="1" value="${r.embeddedStonesQty}" data-asp-qty="${idx}"/>
+      <button class="x danger" onclick="removeAspectRow(${idx})">✕</button>
+    </div>
+    <div class="small" style="margin:-2px 0 8px 0">
+      Камней в наличии: ${state.inventory.gems[r.carrierGemId]||0} · Требуется для активации: <b>${stonesPerAspectOf(r.carrierGemId)}</b>
+    </div>
+  `).join("");
+
+  wrap.querySelectorAll("[data-asp-id]").forEach(sel=>{
+    sel.addEventListener("change", ()=>{
+      const idx = +sel.dataset.aspId;
+      craftDraft.aspects[idx].aspectId = sel.value;
+      recomputeCraft();
+      renderAspectRows();
+    });
+  });
+  wrap.querySelectorAll("[data-asp-gem]").forEach(sel=>{
+    sel.addEventListener("change", ()=>{
+      const idx = +sel.dataset.aspGem;
+      craftDraft.aspects[idx].carrierGemId = sel.value;
+      recomputeCraft();
+      renderAspectRows();
+    });
+  });
+  wrap.querySelectorAll("[data-asp-qty]").forEach(inp=>{
+    inp.addEventListener("input", ()=>{
+      const idx = +inp.dataset.aspQty;
+      craftDraft.aspects[idx].embeddedStonesQty = Math.max(0, Math.floor(+inp.value||0));
+      recomputeCraft();
+      renderAspectRows();
+    });
+  });
+}
+
+function stonesPerAspectOf(gemId){
+  const g = allGems().find(x=>x.id===gemId);
+  return g?.stonesPerAspect ?? 0;
+}
+
+/* ---------- recompute craft ---------- */
+function recomputeCraft(){
+  if(!craftDraft) return;
+
+  // sync mode
+  craftDraft.mode = $("craftMode").value;
+
+  // Enforce constructor nature: if mode aspects, we don’t use gemRows (but we still consume stones via aspects)
+  // If mode gems, we ignore aspects list.
+  if(craftDraft.mode==="aspects"){
+    $("modeGems").classList.add("hidden");
+    $("modeAspects").classList.remove("hidden");
+    if($("aspectRows").children.length===0) addAspectRow();
+  }else{
+    $("modeGems").classList.remove("hidden");
+    $("modeAspects").classList.add("hidden");
+    if($("gemRows").children.length===0) addGemRow();
+  }
+
+  const tierMap = tiersByGp();
+  const primaryMat = allMaterials().find(m=>m.id===craftDraft.primaryMaterialId) || allMaterials()[0];
+
+  // cost & time
+  let stonesCostGp = 0;
+  let matsCostGp = 0;
+  let craftTimeMin = 0;
+  let workDC = primaryMat?.workDC ?? 0;
+  const multiplier = primaryMat?.saleMultiplier ?? 1;
+
+  // materials bill validation
+  const matNeed = new Map();
+  for(const row of craftDraft.materialsBill){
+    const qty = Math.max(0, row.qty|0);
+    if(!row.materialId) continue;
+    matNeed.set(row.materialId, (matNeed.get(row.materialId)||0) + qty);
+    const mat = allMaterials().find(m=>m.id===row.materialId);
+    if(mat) matsCostGp += qty * (mat.unitCostGp || 0);
+  }
+
+  // stones consumption depends on mode
+  const gemNeed = new Map();
+
+  if(craftDraft.mode==="gems"){
+    for(const row of craftDraft.gems){
+      const qty = Math.max(0, row.qty|0);
+      if(!row.gemId || qty===0) continue;
+      gemNeed.set(row.gemId, (gemNeed.get(row.gemId)||0) + qty);
+
+      const g = allGems().find(x=>x.id===row.gemId);
+      if(g){
+        stonesCostGp += qty * (g.tierGp || 0);
+        const tier = tierMap.get(g.tierGp);
+        craftTimeMin += qty * (tier?.timePerStoneMin || 0);
+      }
+    }
+  }else{
+    // aspects: stones consumed are carrier stones embedded
+    // plus requirement check embeddedStonesQty >= stonesPerAspect
+    for(const row of craftDraft.aspects){
+      const qty = Math.max(0, row.embeddedStonesQty|0);
+      if(!row.carrierGemId || qty===0) continue;
+      gemNeed.set(row.carrierGemId, (gemNeed.get(row.carrierGemId)||0) + qty);
+
+      const g = allGems().find(x=>x.id===row.carrierGemId);
+      if(g){
+        stonesCostGp += qty * (g.tierGp || 0);
+        const tier = tierMap.get(g.tierGp);
+        craftTimeMin += qty * (tier?.timePerStoneMin || 0);
+      }
+    }
+  }
+
+  // validations
+  let ok = true;
+  const problems = [];
+
+  // enough mats in inventory
+  for(const [matId, need] of matNeed.entries()){
+    const have = state.inventory.materials[matId]||0;
+    if(need>have){
+      ok=false;
+      problems.push(`Материал "${nameOfMat(matId)}": нужно ${need}, есть ${have}`);
+    }
+  }
+
+  // enough gems in inventory
+  for(const [gemId, need] of gemNeed.entries()){
+    const have = state.inventory.gems[gemId]||0;
+    if(need>have){
+      ok=false;
+      problems.push(`Самоцвет "${nameOfGem(gemId)}": нужно ${need}, есть ${have}`);
+    }
+  }
+
+  // aspect requirements
+  if(craftDraft.mode==="aspects"){
+    // requirement: each aspect row must have embeddedStonesQty >= stonesPerAspect(gem)
+    for(const row of craftDraft.aspects){
+      const req = stonesPerAspectOf(row.carrierGemId);
+      const qty = Math.max(0, row.embeddedStonesQty|0);
+      if(req>0 && qty<req){
+        ok=false;
+        problems.push(`Аспект "${nameOfAspect(row.aspectId)}": в изделии ${qty} камней "${nameOfGem(row.carrierGemId)}", нужно минимум ${req}`);
+      }
+    }
+  }
+
+  // final price
+  const base = stonesCostGp + matsCostGp;
+  const final = base * multiplier;
+
+  // UI
+  $("craftConfirmBtn").disabled = !ok;
+  $("craftLiveStatus").textContent = ok ? "можно крафтить" : "есть проблемы";
+  $("craftLiveStatus").style.borderColor = ok ? "var(--ok)" : "var(--danger)";
+
+  const gemsText = craftDraft.mode==="gems"
+    ? summarizeMap(gemNeed, nameOfGem)
+    : summarizeMap(gemNeed, nameOfGem);
+
+  const aspectsText = craftDraft.mode==="aspects"
+    ? craftDraft.aspects.map(a=>`${nameOfAspect(a.aspectId)} ← ${nameOfGem(a.carrierGemId)} x${a.embeddedStonesQty}`).join("; ")
+    : "—";
+
+  const matsText = summarizeMap(matNeed, nameOfMat);
+
+  $("craftSummary").innerHTML = `
+    <div>Материалы: <b>${esc(matsText||"—")}</b></div>
+    <div>Самоцветы: <b>${esc(gemsText||"—")}</b></div>
+    <div>Аспекты: <b>${esc(aspectsText||"—")}</b></div>
+    <hr>
+    <div>Стоимость камней: <b>${stonesCostGp.toFixed(2)} зм</b></div>
+    <div>Стоимость материалов: <b>${matsCostGp.toFixed(2)} зм</b></div>
+    <div>База: <b>${base.toFixed(2)} зм</b></div>
+    <div>Множитель оправы (${esc(primaryMat?.name||"—")}): <b>x${multiplier}</b></div>
+    <div>Итоговая цена продажи: <b>${final.toFixed(2)} зм</b></div>
+    <div>Время изготовления: <b>${formatTime(craftTimeMin)}</b></div>
+    <div>Сложность работы: <b>${workDC}</b></div>
+    ${ok ? "" : `<hr><div class="bad">Проблемы:<br>• ${problems.map(esc).join("<br>• ")}</div>`}
+  `;
+}
+
+function confirmCraft(){
+  if(!craftDraft) return;
+  recomputeCraft();
+  if($("craftConfirmBtn").disabled) return;
+
+  // compute needs again (use recompute logic but minimal)
+  const tierMap = tiersByGp();
+  const primaryMat = allMaterials().find(m=>m.id===craftDraft.primaryMaterialId) || allMaterials()[0];
+  const multiplier = primaryMat?.saleMultiplier ?? 1;
+
+  const matNeed = new Map();
+  for(const row of craftDraft.materialsBill){
+    const qty = Math.max(0, row.qty|0);
+    if(!row.materialId || qty===0) continue;
+    matNeed.set(row.materialId, (matNeed.get(row.materialId)||0) + qty);
+  }
+
+  const gemNeed = new Map();
+  if(craftDraft.mode==="gems"){
+    for(const row of craftDraft.gems){
+      const qty = Math.max(0, row.qty|0);
+      if(!row.gemId || qty===0) continue;
+      gemNeed.set(row.gemId, (gemNeed.get(row.gemId)||0) + qty);
+    }
+  }else{
+    for(const row of craftDraft.aspects){
+      const qty = Math.max(0, row.embeddedStonesQty|0);
+      if(!row.carrierGemId || qty===0) continue;
+      gemNeed.set(row.carrierGemId, (gemNeed.get(row.carrierGemId)||0) + qty);
+    }
+  }
+
+  // deduct inventory
+  for(const [mid, need] of matNeed.entries()){
+    state.inventory.materials[mid] = Math.max(0, (state.inventory.materials[mid]||0) - need);
+  }
+  for(const [gid, need] of gemNeed.entries()){
+    state.inventory.gems[gid] = Math.max(0, (state.inventory.gems[gid]||0) - need);
+  }
+
+  // compute final numbers
+  let stonesCostGp = 0;
+  let matsCostGp = 0;
+  let craftTimeMin = 0;
+
+  for(const [mid, need] of matNeed.entries()){
+    const mat = allMaterials().find(m=>m.id===mid);
+    matsCostGp += need * (mat?.unitCostGp || 0);
+  }
+
+  for(const [gid, need] of gemNeed.entries()){
+    const g = allGems().find(x=>x.id===gid);
+    if(g){
+      stonesCostGp += need * (g.tierGp || 0);
+      const tier = tierMap.get(g.tierGp);
+      craftTimeMin += need * (tier?.timePerStoneMin || 0);
+    }
+  }
+
+  const base = stonesCostGp + matsCostGp;
+  const final = base * multiplier;
+
+  const typeId = craftDraft.typeId || builtin.jewelryTypes?.[0]?.id || "";
+  const typeName = (builtin.jewelryTypes||[]).find(t=>t.id===typeId)?.name || "Украшение";
+
+  const name = (craftDraft.name || $("craftName").value || "").trim() || `${typeName}`;
+
+  const entry = {
+    id: uid("item"),
+    createdAt: nowIso(),
+    name,
+    typeId,
+    typeName,
+    primaryMaterialId: primaryMat?.id || "",
+    primaryMaterialName: primaryMat?.name || "—",
+    mode: craftDraft.mode,
+    finalPriceGp: final,
+    craftTimeMin,
+    workDC: primaryMat?.workDC || 0,
+    materialsBillText: summarizeMap(matNeed, nameOfMat),
+    gemsText: summarizeMap(gemNeed, nameOfGem),
+    aspectsText: craftDraft.mode==="aspects"
+      ? craftDraft.aspects.map(a=>`${nameOfAspect(a.aspectId)} ← ${nameOfGem(a.carrierGemId)} x${a.embeddedStonesQty}`).join("; ")
+      : "—"
+  };
+
+  state.journal.push(entry);
+  saveState();
+
+  closeCraft();
+  renderInventory();
+  renderJournal();
+}
+
+/* ---------- formatting ---------- */
+function formatCoins(c){
+  if(!c) return "—";
+  const parts=[];
+  if(c.cp) parts.push(`${c.cp} мм`);
+  if(c.sp) parts.push(`${c.sp} см`);
+  if(c.gp) parts.push(`${c.gp} зм`);
+  return parts.join(", ") || "—";
+}
+function formatTime(min){
+  min = Math.max(0, Math.floor(min||0));
+  if(min<60) return `${min} мин`;
+  const h = Math.floor(min/60);
+  const m = min%60;
+  if(h<24) return `${h} ч ${m} мин`;
+  const d = Math.floor(h/24);
+  const hh = h%24;
+  return `${d} д ${hh} ч`;
+}
+function summarizeMap(map, nameFn){
+  const parts=[];
+  for(const [id, qty] of map.entries()){
+    if(!qty) continue;
+    parts.push(`${nameFn(id)} x${qty}`);
+  }
+  return parts.join(", ");
+}
+
+function nameOfGem(id){ return allGems().find(x=>x.id===id)?.name || id; }
+function nameOfAspect(id){ return allAspects().find(x=>x.id===id)?.name || id; }
+function nameOfMat(id){ return allMaterials().find(x=>x.id===id)?.name || id; }
+
+function invGemText(id){
+  const have = state.inventory.gems[id]||0;
+  return `в наличии: ${have}`;
+}
+function invMatText(id){
+  const have = state.inventory.materials[id]||0;
+  return `в наличии: ${have}`;
+}
+
+function isCustomGem(id){ return (state.custom.gems||[]).some(x=>x.id===id); }
+function isCustomAspect(id){ return (state.custom.aspects||[]).some(x=>x.id===id); }
+
+/* ---------- IO ---------- */
+function exportState(){
+  const text = JSON.stringify(state, null, 2);
+  navigator.clipboard.writeText(text);
+  alert("Скопировано в буфер обмена.");
+}
+function importState(){
+  try{
+    const obj = JSON.parse($("importBox").value);
+    state = obj;
+    normalizeState();
+    saveState();
+    renderAll();
+    alert("Импорт выполнен.");
+  }catch(e){
+    alert("Ошибка: JSON не парсится.");
+  }
+}
+function resetState(){
+  if(!confirm("Сбросить состояние?")) return;
+  localStorage.removeItem(SAVE_KEY);
+  state = loadState();
+  normalizeState();
+  renderAll();
+}
+
+/* ---------- simple editors (минимально, чтобы ты мог дополнять) ---------- */
+let simpleCtx = null;
+
+function openGemEditor(id=null){
+  const editing = id ? (state.custom.gems||[]).find(x=>x.id===id) : null;
+
+  simpleCtx = { type:"gem", id: id || uid("gemc"), editing: !!editing };
+  $("simpleTitle").textContent = editing ? "Редактировать самоцвет" : "Новый самоцвет (кастомный)";
+
+  const current = editing || {
+    id: simpleCtx.id,
+    name: "",
+    category: "Кастом",
+    tierGp: 10,
+    stonesPerAspect: 2,
+    aspectSlotsInItem: 1,
+    aspectIds: [],
+    rulesText: "",
+    icon: ""
+  };
+
+  $("simpleBody").innerHTML = `
+    <div class="row">
+      <div><label>Название</label><input id="ed_name" value="${esc(current.name)}"></div>
+      <div><label>Категория</label><input id="ed_cat" value="${esc(current.category)}"></div>
+    </div>
+    <div class="row">
+      <div><label>Tier (зм)</label><input id="ed_tier" type="number" min="1" value="${current.tierGp}"></div>
+      <div><label>stonesPerAspect</label><input id="ed_spa" type="number" min="0" value="${current.stonesPerAspect}"></div>
+    </div>
+    <div class="row">
+      <div><label>Лимит аспектов в изделии</label><input id="ed_slots" type="number" min="0" value="${current.aspectSlotsInItem||0}"></div>
+      <div><label>Иконка (путь)</label><input id="ed_icon" value="${esc(current.icon||"")}"></div>
+    </div>
+    <label>Описание/правила</label>
+    <textarea id="ed_rules" rows="5">${esc(current.rulesText||"")}</textarea>
+  `;
+
+  $("simpleSaveBtn").onclick = ()=>{
+    const obj = {
+      id: current.id,
+      name: $("ed_name").value.trim(),
+      category: $("ed_cat").value.trim() || "Кастом",
+      tierGp: Math.max(1, +$("ed_tier").value||10),
+      stonesPerAspect: Math.max(0, +$("ed_spa").value||0),
+      aspectSlotsInItem: Math.max(0, +$("ed_slots").value||0),
+      aspectIds: current.aspectIds || [],
+      rulesText: $("ed_rules").value.trim(),
+      icon: $("ed_icon").value.trim()
+    };
+    if(!obj.name) return alert("Название обязательно.");
+
+    // upsert
+    const idx = (state.custom.gems||[]).findIndex(x=>x.id===obj.id);
+    if(idx>=0) state.custom.gems[idx]=obj;
+    else state.custom.gems.push(obj);
+
+    // ensure inventory key
+    state.inventory.gems[obj.id] ??= 0;
+
+    saveState();
+    closeSimple();
+    renderAll();
+  };
+
+  $("simpleDeleteBtn").classList.toggle("hidden", !editing);
+  $("simpleDeleteBtn").onclick = ()=>{
+    if(!confirm("Удалить кастомный самоцвет?")) return;
+    state.custom.gems = (state.custom.gems||[]).filter(x=>x.id!==current.id);
+    delete state.inventory.gems[current.id];
+    saveState();
+    closeSimple();
+    renderAll();
+  };
+
+  $("simpleModal").classList.remove("hidden");
+}
+
+function openAspectEditor(id=null){
+  const editing = id ? (state.custom.aspects||[]).find(x=>x.id===id) : null;
+
+  simpleCtx = { type:"aspect", id: id || uid("aspc"), editing: !!editing };
+  $("simpleTitle").textContent = editing ? "Редактировать аспект" : "Новый аспект (кастомный)";
+
+  const current = editing || {
+    id: simpleCtx.id,
+    name: "",
+    category: "Кастом",
+    rulesText: "",
+    gemIds: [],
+    icon: ""
+  };
+
+  $("simpleBody").innerHTML = `
+    <div class="row">
+      <div><label>Название</label><input id="ed_name" value="${esc(current.name)}"></div>
+      <div><label>Категория</label><input id="ed_cat" value="${esc(current.category)}"></div>
+    </div>
+    <div class="row">
+      <div><label>Иконка (путь)</label><input id="ed_icon" value="${esc(current.icon||"")}"></div>
+    </div>
+    <label>Описание/правила</label>
+    <textarea id="ed_rules" rows="6">${esc(current.rulesText||"")}</textarea>
+  `;
+
+  $("simpleSaveBtn").onclick = ()=>{
+    const obj = {
+      id: current.id,
+      name: $("ed_name").value.trim(),
+      category: $("ed_cat").value.trim() || "Кастом",
+      rulesText: $("ed_rules").value.trim(),
+      gemIds: current.gemIds || [],
+      icon: $("ed_icon").value.trim()
+    };
+    if(!obj.name) return alert("Название обязательно.");
+
+    const idx = (state.custom.aspects||[]).findIndex(x=>x.id===obj.id);
+    if(idx>=0) state.custom.aspects[idx]=obj;
+    else state.custom.aspects.push(obj);
+
+    saveState();
+    closeSimple();
+    renderAll();
+  };
+
+  $("simpleDeleteBtn").classList.toggle("hidden", !editing);
+  $("simpleDeleteBtn").onclick = ()=>{
+    if(!confirm("Удалить кастомный аспект?")) return;
+    state.custom.aspects = (state.custom.aspects||[]).filter(x=>x.id!==current.id);
+    saveState();
+    closeSimple();
+    renderAll();
+  };
+
+  $("simpleModal").classList.remove("hidden");
+}
+
+function closeSimple(){ $("simpleModal").classList.add("hidden"); simpleCtx=null; }
+
+/* ---------- boot ---------- */
+init();
+</script>
+</body>
+</html>
