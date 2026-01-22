@@ -43,22 +43,19 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0;
-      background:
-        radial-gradient(900px 500px at 10% 0%, rgba(201,162,77,.10), transparent 55%),
-        radial-gradient(700px 500px at 90% 20%, rgba(81,194,127,.08), transparent 55%),
-        radial-gradient(700px 500px at 60% 90%, rgba(120,140,255,.08), transparent 60%),
-        var(--bg);
-      color:var(--text);
-      font-family:var(--sans);
-      letter-spacing:.1px;
-    }
+  margin:0;
+  background: var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  letter-spacing:.1px;
+}
     a{color:inherit}
     .topbar{
       position:sticky; top:0; z-index:5;
-      background:rgba(15,17,21,.72);
-      backdrop-filter: blur(12px);
-      border-bottom:1px solid var(--stroke);
+      background: rgba(243,239,228,.92);
+      backdrop-filter: none;
+      border-bottom:1px solid var(--stroke2);
+
     }
     .topbarInner{
       max-width:1200px;
@@ -2398,3 +2395,4 @@ function fileToDataURL(file){
 </script>
 </body>
 </html>
+
