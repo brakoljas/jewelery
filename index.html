@@ -1162,11 +1162,12 @@ function renderGems(){
         </div>
 
         <div class="btnRow">
-          <button class="btn secondary" data-act="minus">-1</button>
-          <button class="btn secondary" data-act="plus">+1</button>
-          <button class="btn" data-act="craft">Создать изделие</button>
-        </div>
-      `;
+        <button class="btn secondary" data-act="minus">-1</button>
+        <button class="btn secondary" data-act="plus">+1</button>
+        <button class="btn secondary" data-act="toAspects">Показать аспекты</button>
+        <button class="btn" data-act="craft">Создать изделие</button>
+  </div>
+
 
       card.querySelector('[data-act="minus"]').onclick = ()=>{
         invAdd(state.inventory.gems, g.id, -1);
@@ -1182,6 +1183,25 @@ function renderGems(){
         draw();
         updateTopPill();
       };
+      card.querySelector('[data-act="toAspects"]').onclick = ()=>{
+  // если у камня несколько аспектов — покажем все связанные
+  // если бытовой эффект — попадём в соответствующую категорию
+  const firstAspect = g.aspects && g.aspects.length ? g.aspects[0] : "";
+
+  ui.aspects.q = "";
+  ui.aspects.group = "";
+  ui.aspects.sub = "";
+  ui.aspects.onlyAvailable = false;
+
+  if(firstAspect){
+    ui.aspects.q = aspectsById.get(firstAspect)?.name || "";
+  }
+
+  saveState();
+  showTab("aspects");
+};
+
+      
       card.querySelector('[data-act="craft"]').onclick = ()=>{
         // Переход в крафт: фиксируем gem, сбрасываем аспекты, режим "gem"
         state.craftDraft.mode = "gem";
@@ -2408,6 +2428,7 @@ function fileToDataURL(file){
 </script>
 </body>
 </html>
+
 
 
 
