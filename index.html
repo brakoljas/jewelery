@@ -1,1195 +1,2400 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Ювелирное дело — трекер</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ювелирное дело — D&D</title>
+  <style>
+   :root{
+  /* “бумага + чернила” как в PDF */
+  --bg:#f3efe4;                 /* фон-бумага */
+  --panel:#fbf7ee;              /* панели светлее */
+  --card:#fffdf6;               /* карточки почти белые */
+  --stroke:rgba(20,20,20,.18);  /* тонкие чернильные линии */
+  --stroke2:rgba(20,20,20,.28);
 
-<style>
-:root{
-  --bg:#0f1115;
-  --panel:#171a22;
-  --panel2:#1f2430;
-  --line:#2a3040;
-  --text:#e7e8ee;
-  --muted:#9aa2b6;
-  --accent:#6ccfff;
-  --danger:#ff6b6b;
-  --ok:#5fd38d;
-  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --text:rgba(18,18,18,.94);    /* основной текст — почти чёрный */
+  --muted:rgba(18,18,18,.70);
+  --muted2:rgba(18,18,18,.55);
+
+  /* акцент — “золото из иллюстраций”, но очень умеренно */
+  --accent:#b1872f;
+
+  /* статусные цвета — приглушённые, без неона */
+  --bad:#9f3b35;
+  --ok:#2f6f4a;
+  --warn:#8a6a2b;
+
+  /* тени — мягкие, “печатные” */
+  --shadow:0 10px 26px rgba(0,0,0,.10);
+
+  --r12:12px;
+  --r16:16px;
+  --r18:18px;
+  --pad:14px;
+  --gap:12px;
+
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* типографика “книжная” */
+  --sans: ui-serif, Georgia, "Times New Roman", Times, serif;
 }
 
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 16px;background:#0c0e13;border-bottom:1px solid #1f2430
-}
-header .title{font-weight:700}
-header .status{font-size:12px;color:var(--muted)}
-main{padding:12px;max-width:1100px;margin:0 auto}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 500px at 10% 0%, rgba(201,162,77,.10), transparent 55%),
+        radial-gradient(700px 500px at 90% 20%, rgba(81,194,127,.08), transparent 55%),
+        radial-gradient(700px 500px at 60% 90%, rgba(120,140,255,.08), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      letter-spacing:.1px;
+    }
+    a{color:inherit}
+    .topbar{
+      position:sticky; top:0; z-index:5;
+      background:rgba(15,17,21,.72);
+      backdrop-filter: blur(12px);
+      border-bottom:1px solid var(--stroke);
+    }
+    .topbarInner{
+      max-width:1200px;
+      margin:0 auto;
+      padding:12px 14px;
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      padding:8px 10px;
+      border:1px solid var(--stroke);
+      background:rgba(20,24,36,.7);
+      border-radius:999px;
+      box-shadow: var(--shadow);
+    }
+    .brand .dot{
+      width:10px; height:10px; border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 0 0 4px rgba(201,162,77,.14);
+    }
+    .brand .title{
+      font-weight:650;
+      font-size:14px;
+      line-height:1;
+    }
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .tab{
+      appearance:none; border:1px solid var(--stroke);
+      background:rgba(20,24,36,.65);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      font-size:13px;
+      box-shadow: 0 10px 22px rgba(0,0,0,.22);
+    }
+    .tab.active{
+      border-color:rgba(201,162,77,.55);
+      color:var(--accent);
+      background:rgba(201,162,77,.10);
+    }
+    .spacer{flex:1}
+    .pill{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--stroke);
+      background:rgba(20,24,36,.55);
+      padding:8px 10px;
+      border-radius:999px;
+      display:flex; gap:8px; align-items:center;
+    }
+    .pill strong{color:var(--text); font-weight:650}
+    main{
+      max-width:1200px;
+      margin:0 auto;
+      padding:16px 14px 34px;
+    }
 
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.tab{
-  padding:7px 10px;border:1px solid var(--line);border-radius:10px;
-  background:var(--panel);color:var(--muted);cursor:pointer;font-size:13px
-}
-.tab.active{background:var(--panel2);color:var(--text);border-color:#3a4258}
+    .section{display:none}
+    .section.active{display:block}
 
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
-.spacer{flex:1}
+    .hrow{
+      display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;
+      margin:8px 0 12px;
+    }
+    h2{
+      margin:8px 0 6px;
+      font-size:18px;
+      font-weight:720;
+      letter-spacing:.2px;
+    }
+    h3{
+      margin:16px 0 8px;
+      font-size:14px;
+      font-weight:700;
+      color:rgba(255,255,255,.86);
+    }
+    .sub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
-.card{
-  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;
-  box-shadow:var(--shadow)
-}
-.card h3{margin:0 0 6px 0;font-size:14px}
-.small{font-size:12px;color:var(--muted);line-height:1.35}
-.bad{color:var(--danger)}
-.good{color:var(--ok)}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
+      gap: var(--gap);
+    }
+    .card{
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(24,29,43,.95), rgba(20,24,36,.95));
+      border-radius: var(--r16);
+      padding: var(--pad);
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(500px 220px at 10% 0%, rgba(201,162,77,.10), transparent 60%);
+      pointer-events:none;
+    }
+    .card > *{position:relative}
 
-button{
-  background:var(--panel2);color:var(--text);
-  border:1px solid var(--line);border-radius:10px;padding:8px 10px;
-  cursor:pointer;font-size:13px
-}
-button:hover{border-color:var(--accent)}
-button.primary{background:#24344c;border-color:#36506f}
-button.danger{border-color:#5b2a2a;color:#ffd1d1}
-button:disabled{opacity:.55;cursor:not-allowed}
+    .row{display:flex; gap:10px; align-items:center}
+    .row.wrap{flex-wrap:wrap}
+    .col{display:flex; flex-direction:column; gap:6px}
+    .between{justify-content:space-between}
 
-input,select,textarea{
-  width:100%;background:#0f1320;color:var(--text);
-  border:1px solid var(--line);border-radius:10px;padding:8px;font-size:13px
-}
-label{display:block;margin:10px 0 6px;font-size:12px;color:var(--muted)}
-hr{border:none;border-top:1px solid var(--line);margin:12px 0}
+    .k{
+      font-size:11px;
+      color:var(--muted2);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+    }
+    .v{
+      font-size:13px;
+      color:var(--text);
+      line-height:1.35;
+    }
+    .mono{font-family:var(--mono)}
 
-.row{display:flex;gap:10px;flex-wrap:wrap}
-.row > *{flex:1;min-width:220px}
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      border:1px solid var(--stroke);
+      background:rgba(0,0,0,.16);
+      padding:5px 8px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--muted);
+      margin:4px 6px 0 0;
+      white-space:nowrap;
+    }
+    .badge .dot{
+      width:7px; height:7px; border-radius:50%;
+      background:rgba(255,255,255,.35);
+    }
+    .badge.ok{border-color:rgba(81,194,127,.35); color:rgba(81,194,127,.95); background:rgba(81,194,127,.08)}
+    .badge.ok .dot{background:rgba(81,194,127,.95)}
+    .badge.bad{border-color:rgba(226,85,85,.35); color:rgba(226,85,85,.95); background:rgba(226,85,85,.08)}
+    .badge.bad .dot{background:rgba(226,85,85,.95)}
+    .badge.warn{border-color:rgba(224,177,74,.35); color:rgba(224,177,74,.95); background:rgba(224,177,74,.08)}
+    .badge.warn .dot{background:rgba(224,177,74,.95)}
+    .tag{
+      display:inline-flex;
+      border:1px solid var(--stroke);
+      background:rgba(201,162,77,.08);
+      color:rgba(201,162,77,.92);
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:12px;
+      margin-left:6px;
+    }
 
-.hidden{display:none !important}
+    .icon48{
+      width:48px; height:48px;
+      border-radius:12px;
+      border:1px solid var(--stroke);
+      background:rgba(0,0,0,.18);
+      display:grid; place-items:center;
+      overflow:hidden;
+      flex:0 0 auto;
+    }
+    .icon48 img{
+      width:44px; height:44px;
+      object-fit:contain;
+      display:block;
+    }
 
-/* modal */
-.modal{
-  position:fixed;inset:0;background:rgba(0,0,0,.6);
-  display:flex;align-items:center;justify-content:center;padding:16px;
-  z-index:999;
-}
-.modal.hidden{display:none !important}
-.modal .box{
-  width:min(920px,100%);max-height:90vh;overflow:auto;
-  background:var(--panel);border:1px solid var(--line);
-  border-radius:16px;box-shadow:var(--shadow);padding:14px;
-}
-.modal .head{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-}
-.modal .head h2{margin:0;font-size:16px}
-.pill{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:4px 8px;border-radius:999px}
+    .btnRow{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    button.btn{
+      appearance:none;
+      border:1px solid rgba(201,162,77,.55);
+      background:rgba(201,162,77,.14);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:650;
+    }
+    button.btn:hover{background:rgba(201,162,77,.18)}
+    button.btn.secondary{
+      border-color:var(--stroke2);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-weight:600;
+    }
+    button.btn.secondary:hover{background:rgba(255,255,255,.06)}
+    button.btn.danger{
+      border-color:rgba(226,85,85,.45);
+      background:rgba(226,85,85,.10);
+    }
+    button.btn.danger:hover{background:rgba(226,85,85,.14)}
+    button.btn.good{
+      border-color:rgba(81,194,127,.55);
+      background:rgba(81,194,127,.12);
+    }
+    button.btn.good:hover{background:rgba(81,194,127,.16)}
+    button.btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      filter:saturate(.8);
+    }
 
-.table{
-  display:grid;gap:8px;
-}
-.tableRow{
-  display:grid;grid-template-columns: 1.6fr .6fr .6fr .4fr;
-  gap:8px;align-items:center;
-}
-.tableRow > *{min-width:0}
-.tableRow .x{width:auto}
-@media (max-width:840px){
-  .tableRow{grid-template-columns:1fr 1fr}
-  .tableRow .x{grid-column:2/3}
-}
-</style>
+    .field{
+      display:flex; flex-direction:column; gap:6px;
+      min-width:200px;
+      flex: 1 1 240px;
+    }
+    .field.small{min-width:160px; flex:1 1 160px}
+    .field.tiny{min-width:120px; flex:1 1 120px}
+    label{
+      font-size:11px;
+      color:var(--muted2);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+    }
+    input, select, textarea{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid var(--stroke);
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      outline:none;
+      font-size:13px;
+    }
+    textarea{min-height:140px; font-family:var(--mono); font-size:12px}
+    input::placeholder{color:rgba(255,255,255,.35)}
+    .checkbox{
+      display:flex; align-items:center; gap:8px;
+      color:var(--muted);
+      font-size:13px;
+      padding:10px 10px;
+      border:1px solid var(--stroke);
+      border-radius:12px;
+      background:rgba(0,0,0,.16);
+      cursor:pointer;
+      user-select:none;
+    }
+    .checkbox input{width:auto}
+    .split{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 860px){
+      .split{grid-template-columns:1fr}
+    }
+    .panel{
+      border:1px solid var(--stroke);
+      background:rgba(20,24,36,.55);
+      border-radius: var(--r16);
+      padding: var(--pad);
+      box-shadow: var(--shadow);
+    }
+    .miniTable{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border:1px solid var(--stroke);
+      border-radius:12px;
+      background:rgba(0,0,0,.14);
+    }
+    .miniTable th, .miniTable td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--stroke);
+      font-size:13px;
+      vertical-align:top;
+    }
+    .miniTable th{
+      text-align:left;
+      font-size:11px;
+      color:var(--muted2);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      background:rgba(255,255,255,.03);
+    }
+    .miniTable tr:last-child td{border-bottom:none}
+    .right{text-align:right}
+    .muted{color:var(--muted)}
+    .note{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--stroke);
+      background:rgba(0,0,0,.14);
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+    .sep{height:1px; background:var(--stroke); margin:12px 0}
+    .logItem{
+      padding:10px 0;
+      border-bottom:1px solid var(--stroke);
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+    }
+    .logItem:last-child{border-bottom:none}
+    .logTitle{font-weight:700; font-size:13px}
+    .logMeta{font-size:12px; color:var(--muted); line-height:1.45}
+    .logActions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+    .tinyBtn{
+      padding:6px 8px; border-radius:10px;
+      font-size:12px; font-weight:650;
+    }
+    .toast{
+      position:fixed; right:14px; bottom:14px; z-index:10;
+      background:rgba(20,24,36,.92);
+      border:1px solid var(--stroke);
+      padding:10px 12px;
+      border-radius:12px;
+      box-shadow: var(--shadow);
+      color:var(--text);
+      font-size:13px;
+      max-width:520px;
+      display:none;
+    }
+  </style>
 </head>
-
 <body>
-<header>
-  <div class="title">Ювелирное дело — трекер</div>
-  <div class="status" id="status">Загрузка данных…</div>
-</header>
+  <div class="topbar">
+    <div class="topbarInner">
+      <div class="brand">
+        <span class="dot"></span>
+        <div class="title">Ювелирное дело</div>
+      </div>
 
-<main>
-  <div class="tabs">
-    <div class="tab active" data-tab="gems">Самоцветы</div>
-    <div class="tab" data-tab="aspects">Аспекты</div>
-    <div class="tab" data-tab="inventory">Инвентарь</div>
-    <div class="tab" data-tab="craft">Крафт</div>
-    <div class="tab" data-tab="journal">Журнал изделий</div>
-    <div class="tab" data-tab="io">Экспорт / Импорт</div>
+      <div class="tabs" id="tabs"></div>
+
+      <div class="spacer"></div>
+
+      <div class="pill" id="topPill">
+        <span>Инвентарь:</span>
+        <span><strong id="pillGems">0</strong> камней</span>
+        <span>•</span>
+        <span><strong id="pillMats">0</strong> материалов</span>
+      </div>
+    </div>
   </div>
 
-  <!-- Самоцветы -->
-  <section id="tab-gems">
-    <div class="toolbar">
-      <input id="gemsSearch" placeholder="Поиск по самоцветам…" />
-      <button onclick="openGemEditor()">Добавить самоцвет</button>
-      <div class="spacer"></div>
-    </div>
-    <div class="grid" id="gemsGrid"></div>
-  </section>
+  <main>
+    <section id="sec_gems" class="section"></section>
+    <section id="sec_aspects" class="section"></section>
+    <section id="sec_inventory" class="section"></section>
+    <section id="sec_craft" class="section"></section>
+    <section id="sec_journal" class="section"></section>
+    <section id="sec_state" class="section"></section>
+  </main>
 
-  <!-- Аспекты -->
-  <section id="tab-aspects" class="hidden">
-    <div class="toolbar">
-      <input id="aspectsSearch" placeholder="Поиск по аспектам…" />
-      <button onclick="openAspectEditor()">Добавить аспект</button>
-      <div class="spacer"></div>
-    </div>
-    <div class="grid" id="aspectsGrid"></div>
-  </section>
+  <div class="toast" id="toast"></div>
 
-  <!-- Инвентарь -->
-  <section id="tab-inventory" class="hidden">
-    <div class="row">
-      <div class="card">
+<script>
+/* =========================================================
+   1) БАЗОВЫЕ ПРАВИЛА / ТАБЛИЦЫ
+   ========================================================= */
+
+const TIER_RULES = {
+  10:  { inlayDC: 8,  inlayTimeMin: 10 },
+  50:  { inlayDC: 10, inlayTimeMin: 30 },
+  100: { inlayDC: 12, inlayTimeMin: 60 },
+  500: { inlayDC: 15, inlayTimeMin: 60 },
+  1000:{ inlayDC: 18, inlayTimeMin: 240 },
+  5000:{ inlayDC: 22, inlayTimeMin: 480 },
+};
+
+const ITEM_TYPES = [
+  { id:"ring",     name:"Кольцо",        units:1 },
+  { id:"amulet",   name:"Амулет",        units:2 },
+  { id:"earring",  name:"Серьга",        units:3 },
+  { id:"bracelet", name:"Браслет",       units:4 },
+  { id:"necklace", name:"Ожерелье",      units:5 },
+  { id:"diadem",   name:"Диадема/Венец", units:6 },
+];
+
+const MATERIALS = [
+  // Драгоценные металлы
+  { id:"copper_tin",      name:"Медь/Олово",        group:"Металлы", mastery:"Низкий",       unitCost:{unit:"мм", value:10},  workDC:5,  workTimeMin:10 },
+  { id:"silver_brass",    name:"Серебро/Латунь",    group:"Металлы", mastery:"Средний",      unitCost:{unit:"см", value:10},  workDC:10, workTimeMin:30 },
+  { id:"gold",            name:"Золото",            group:"Металлы", mastery:"Высокий",      unitCost:{unit:"зм", value:10},  workDC:15, workTimeMin:60 },
+  { id:"platinum_mithril",name:"Платина/Митрил",    group:"Металлы", mastery:"Очень высокий",unitCost:{unit:"зм", value:100}, workDC:20, workTimeMin:240 },
+  { id:"adamantine",      name:"Адамантин",         group:"Металлы", mastery:"Шедевральный", unitCost:{unit:"зм", value:200}, workDC:25, workTimeMin:480 },
+
+  // Иные материалы
+  { id:"wood_stone",      name:"Дерево/Камень",     group:"Иные материалы", mastery:"Низкий",       unitCost:{unit:"мм", value:10},  workDC:5,  workTimeMin:10 },
+  { id:"leather_bone",    name:"Кожа/Кость",        group:"Иные материалы", mastery:"Средний",      unitCost:{unit:"см", value:10},  workDC:10, workTimeMin:30 },
+  { id:"glass_ceramic",   name:"Стекло/Керамика",   group:"Иные материалы", mastery:"Высокий",      unitCost:{unit:"зм", value:10},  workDC:15, workTimeMin:60 },
+  { id:"ivory",           name:"Слоновая кость",    group:"Иные материалы", mastery:"Очень высокий",unitCost:{unit:"зм", value:50},  workDC:20, workTimeMin:240 },
+  { id:"dragon_bone",     name:"Драконья кость",    group:"Иные материалы", mastery:"Шедевральный", unitCost:{unit:"зм", value:200}, workDC:25, workTimeMin:480 },
+];
+
+/* =========================================================
+   2) АСПЕКТЫ (правила + мега) — справочник
+   ========================================================= */
+
+const ASPECTS_BASE = [
+  // ИНТ
+  { id:"truth", group:"ИНТ", sub:"Характеристика", name:"Истина", effect:"Знания, которые сияют, как маяк среди бури. Владелец увеличивает свой показатель Интеллекта на 1, а максимум теперь равен 21." },
+  { id:"erudition", group:"ИНТ", sub:"Навыки", name:"Эрудиция", effect:"Глубокие всесторонние познания. Владелец добавляет половину бонуса мастерства (округляя вверх) к проверкам навыков Интеллекта (История, Магия, Природа, Расследование, Религия)." },
+
+  // ХАР
+  { id:"wit", group:"ХАР", sub:"Характеристика", name:"Остроумие", effect:"Изобретательное чувство юмора. Владелец увеличивает Харизму на 1, а максимум теперь равен 21." },
+  { id:"charm", group:"ХАР", sub:"Навыки", name:"Обаяние", effect:"Умение располагать к себе. Владелец добавляет половину бонуса мастерства (округляя вверх) к проверкам навыков Харизмы (Выступление, Обман, Убеждение, Устрашение)." },
+
+  // МУД
+  { id:"patience", group:"МУД", sub:"Характеристика", name:"Терпение", effect:"Сдержанность в моменты ярких впечатлений. Владелец увеличивает Мудрость на 1, а максимум теперь равен 21." },
+  { id:"spirituality", group:"МУД", sub:"Навыки", name:"Духовность", effect:"Единение с природой. Владелец добавляет половину бонуса мастерства (округляя вверх) к проверкам навыков Мудрости (Восприятие, Выживание, Медицина, Проницательность, Уход за животными)." },
+
+  // ЛОВ
+  { id:"sneakiness", group:"ЛОВ", sub:"Характеристика", name:"Пронырливость", effect:"Владелец увеличивает Ловкость на 1, а максимум теперь равен 21." },
+  { id:"incorporeality", group:"ЛОВ", sub:"Навыки", name:"Бесплотность", effect:"Лёгкость движений, граничащая с бестелесностью. Владелец добавляет половину бонуса мастерства (округляя вверх) к проверкам навыков Ловкости (Акробатика, Ловкость рук, Скрытность)." },
+
+  // ТЕЛ
+  { id:"steadfastness", group:"ТЕЛ", sub:"Характеристика", name:"Непоколебимость", effect:"Закалённое тело. Владелец увеличивает Телосложение на 1, а максимум теперь равен 21." },
+  { id:"resistance", group:"ТЕЛ", sub:"Сопротивление", name:"Устойчивость", effect:"Способность противостоять стихиям. Владелец получает сопротивление к одному типу урона на выбор: огонь, холод, кислота, электричество, яд." },
+
+  // СИЛ
+  { id:"might", group:"СИЛ", sub:"Характеристика", name:"Мощь", effect:"Владелец увеличивает Силу на 1, а максимум теперь равен 21." },
+  { id:"training", group:"СИЛ", sub:"Навыки", name:"Тренированность", effect:"Владелец добавляет половину бонуса мастерства (округляя вверх) к проверке Атлетики." },
+
+  // Реакция
+  { id:"justice", group:"Реакция", sub:"Реакция", name:"Справедливость", effect:"Получив негативный эффект (урон, проклятье, сглаз и т.д.), владелец может реакцией подвергнуть противника такому же эффекту. 1 раз за долгий отдых." },
+  { id:"comradeship", group:"Реакция", sub:"Реакция", name:"Товарищество", effect:"Если дружественное существо в пределах 5 футов подверглось нападению, владелец может реакцией наложить помеху на бросок атаки. 1 раз за короткий отдых." },
+  { id:"self_preservation", group:"Реакция", sub:"Реакция", name:"Самосохранение", effect:"Владелец может реакцией перевести нацеленную на него атаку на существо в пределах 5 футов. 1 раз за короткий отдых." },
+
+  // Физ
+  { id:"speed", group:"Физ", sub:"Усиление", name:"Скорость", effect:"Владелец увеличивает скорость передвижения на 5 футов." },
+  { id:"ruthlessness", group:"Физ", sub:"Усиление", name:"Беспощадность", effect:"Владелец может заменить значение броска атаки оружием на критическое, если цель в состоянии «тяжело ранена». 1 раз за долгий отдых." },
+
+  // Магия
+  { id:"mercy", group:"Магия", sub:"Исцеление", name:"Милосердие", effect:"Владелец восполняет 1 дополнительное очко здоровья за каждый брошенный куб существу, которое исцеляет." },
+  { id:"generosity", group:"Магия", sub:"Ячейки", name:"Щедрость", effect:"Владелец может потратить свою ячейку заклинаний, чтобы восстановить ячейку союзника. Следующий бросок атаки заклинанием совершается обоими с преимуществом. 1 раз за долгий отдых." },
+
+  // Броски
+  { id:"luck", group:"Броски", sub:"Переброс", name:"Удачливость", effect:"Владелец может перебросить любой бросок куба: свой, союзника или противника. 1 раз за долгий отдых." },
+  { id:"vigilance", group:"Броски", sub:"Инициатива", name:"Бдительность", effect:"Владелец добавляет бонус мастерства к броску инициативы. 1 раз за долгий отдых." },
+
+  // Спасброски
+  { id:"courage", group:"Спасброски", sub:"Ментальные", name:"Храбрость", effect:"Владелец добавляет половину бонуса мастерства (округляя вверх) к спасброскам МУД, ИНТ, ХАР." },
+  { id:"fortitude", group:"Спасброски", sub:"Физические", name:"Стойкость", effect:"Владелец добавляет половину бонуса мастерства (округляя вверх) к спасброскам СИЛ, ЛОВ, ТЕЛ." },
+  { id:"perseverance", group:"Спасброски", sub:"Кости хитов", name:"Упорство", effect:"Владелец может тратить кости хитов, чтобы добавлять их к совершаемым спасброскам." },
+  { id:"tenacity", group:"Спасброски", sub:"Смерть", name:"Живучесть", effect:"Владелец добавляет половину бонуса мастерства (округляя вверх) к спасброскам смерти." },
+
+  // Снаряжение
+  { id:"resourcefulness", group:"Снаряжение", sub:"Настройка", name:"Находчивость", effect:"Владелец может настроиться на один дополнительный магический предмет на 1 час. 1 раз за долгий отдых." },
+  { id:"grip", group:"Снаряжение", sub:"Добыча", name:"Ухватка", effect:"Владелец может действием найти дополнительную добычу при обыске (1к100). 1 раз за долгий отдых." },
+  { id:"diligence", group:"Снаряжение", sub:"Обучение", name:"Прилежность", effect:"Владелец получает преимущество на броски к20, нацеленные на развитие владения неизвестными инструментами или языками." },
+
+  // МЕГА
+  { id:"valor", group:"МЕГА", sub:"Мега-аспект", name:"Доблесть", isMega:true, includes:["might","training","steadfastness","resistance","justice"],
+    effect:"Мантия героизма. Одновременно воплощает несколько аспектов." },
+  { id:"tranquility", group:"МЕГА", sub:"Мега-аспект", name:"Умиротворенность", isMega:true, includes:["patience","spirituality","sneakiness","incorporeality","mercy"],
+    effect:"Полный контроль над телом и душой. Одновременно воплощает несколько аспектов." },
+  { id:"attraction", group:"МЕГА", sub:"Мега-аспект", name:"Притягательность", isMega:true, includes:["wit","charm","truth","erudition","comradeship"],
+    effect:"Неотразимый шарм. Одновременно воплощает несколько аспектов." },
+  { id:"objectivity", group:"МЕГА", sub:"Мега-аспект", name:"Объективность", isMega:true, includes:["truth","erudition","patience","spirituality","generosity"],
+    effect:"Беспристрастная оценка. Одновременно воплощает несколько аспектов." },
+];
+
+/* =========================================================
+   3) САМОЦВЕТЫ — полный список (встроенный)
+   Иконки ожидаются в папке icons/ рядом с index.html.
+   ========================================================= */
+
+const GEMS_BASE = [
+  // Тир 10 — бытовые эффекты (каждый создаёт свой "аспект-эффект")
+  { id:"azurite", name:"Азурит", tier:10, cost:10, look:"Непрозрачный, пёстрый тёмно-синий.", stonesPerAspect:2, maxAspects:1, effects:["Обдувает ветерком разной силы в радиусе 1 фт вокруг владельца."] , icon:"icons/azurite.png" },
+  { id:"turquoise", name:"Бирюза", tier:10, cost:10, look:"Непрозрачная, зелёно-голубая.", stonesPerAspect:2, maxAspects:1, effects:["Охлаждает 1 куб. фут воздуха или жидкости вплоть до температуры замерзания воды."] , icon:"icons/turquoise.png" },
+  { id:"tigers_eye", name:"Тигровый глаз", tier:10, cost:10, look:"Полупрозрачный, коричневый с золотой серединкой.", stonesPerAspect:2, maxAspects:1, effects:["Согревает 1 куб. фут воздуха или жидкости вплоть до температуры кипения воды."] , icon:"icons/tigers_eye.png" },
+  { id:"eye_agate", name:"Глазчатый агат", tier:10, cost:10, look:"Полупрозрачный, круги разных цветов.", stonesPerAspect:2, maxAspects:1, effects:["Владелец может вызвать один резкий звук в пределах 20 фт (свист, хлопок, шелест или шипение)."] , icon:"icons/eye_agate.png" },
+  { id:"blue_quartz", name:"Голубой кварц", tier:10, cost:10, look:"Прозрачный, голубой.", stonesPerAspect:2, maxAspects:1, effects:["Владелец всегда знает точное время суток, пока носит украшение с этим камнем."] , icon:"icons/blue_quartz.png" },
+  { id:"lapis", name:"Лазурит", tier:10, cost:10, look:"Непрозрачный, голубой/синий с жёлтыми вкраплениями.", stonesPerAspect:2, maxAspects:1, effects:["Камень постоянно источает тусклый свет в радиусе 15 фт."] , icon:"icons/lapis.png" },
+  { id:"malachite", name:"Малахит", tier:10, cost:10, look:"Непрозрачный, светло- и тёмно-зелёные полосы.", stonesPerAspect:3, maxAspects:1, effects:["Создаёт иллюзорную полупрозрачную копию части тела, на которую надето украшение, в пределах 5 фт от владельца."] , icon:"icons/malachite.png" },
+  { id:"moss_agate", name:"Моховой агат", tier:10, cost:10, look:"Полупрозрачный, розовый или бело-жёлтый с мшистыми пятнами.", stonesPerAspect:4, maxAspects:1, effects:["Владелец может связать с собой один предмет (не оружие). Бонусным действием возвращает предмет с расстояния до 30 фт."] , icon:"icons/moss_agate.png" },
+  { id:"obsidian", name:"Обсидиан", tier:10, cost:10, look:"Непрозрачный, чёрный.", stonesPerAspect:2, maxAspects:1, effects:["Носитель видит только хорошие сны и никогда не подвержен кошмарам."] , icon:"icons/obsidian.png" },
+  { id:"banded_agate", name:"Полосчатый агат", tier:10, cost:10, look:"Полупрозрачный, полосы разных оттенков.", stonesPerAspect:2, maxAspects:1, effects:["Источает в радиусе 5 фт постоянный аромат последней субстанции, которая коснулась камня."] , icon:"icons/banded_agate.png" },
+  { id:"rhodochrosite", name:"Родохрозит", tier:10, cost:10, look:"Непрозрачный, светло-розовый.", stonesPerAspect:2, maxAspects:1, effects:["При помещении в еду становится тем темнее, чем менее свежа эта еда."] , icon:"icons/rhodochrosite.png" },
+  { id:"hematite", name:"Гематит", tier:10, cost:10, look:"Непрозрачный, серо-чёрный.", stonesPerAspect:2, maxAspects:1, effects:["Заставляет мёртвую органику в радиусе 2 фт гнить и портиться в 10 раз интенсивнее."] , icon:"icons/hematite.png" },
+
+  // Тир 50 — правила (обычно 5, один 7)
+  { id:"heliotrope", name:"Гелиотроп", tier:50, cost:50, look:"Непрозрачный, тёмно-серый с красными вкраплениями.", stonesPerAspect:5, maxAspects:1, aspects:["grip"], icon:"icons/heliotrope.png" },
+  { id:"star_rose_quartz", name:"Звёздчатый розовый кварц", tier:50, cost:50, look:"Полупрозрачный розовый с белой звездой по центру.", stonesPerAspect:5, maxAspects:1, aspects:["courage"], icon:"icons/star_rose_quartz.png" },
+  { id:"quartz", name:"Кварц", tier:50, cost:50, look:"Прозрачный, белый/дымчатый/жёлтый.", stonesPerAspect:5, maxAspects:1, aspects:["mercy"], icon:"icons/quartz.png" },
+  { id:"moonstone", name:"Лунный камень", tier:50, cost:50, look:"Полупрозрачный белый с бледно-голубым отливом.", stonesPerAspect:5, maxAspects:1, aspects:["speed"], icon:"icons/moonstone.png" },
+  { id:"onyx", name:"Оникс", tier:50, cost:50, look:"Непрозрачный: чёрно-белые полосы или чисто чёрный/белый.", stonesPerAspect:5, maxAspects:1, aspects:["comradeship"], icon:"icons/onyx.png" },
+  { id:"sardonyx", name:"Сардоникс", tier:50, cost:50, look:"Непрозрачный, бело-красные полосы.", stonesPerAspect:5, maxAspects:1, aspects:["generosity"], icon:"icons/sardonyx.png" },
+  { id:"carnelian", name:"Сердолик", tier:50, cost:50, look:"Непрозрачный, оранжевый с переходом в красно-коричневый.", stonesPerAspect:5, maxAspects:1, aspects:["justice"], icon:"icons/carnelian.png" },
+  { id:"chalcedony", name:"Халцедон", tier:50, cost:50, look:"Непрозрачный, белый.", stonesPerAspect:5, maxAspects:1, aspects:["self_preservation"], icon:"icons/chalcedony.png" },
+  { id:"chrysoprase", name:"Хризопраз", tier:50, cost:50, look:"Полупрозрачный, зелёный.", stonesPerAspect:5, maxAspects:1, aspects:["diligence"], icon:"icons/chrysoprase.png" },
+  { id:"zircon", name:"Циркон", tier:50, cost:50, look:"Прозрачный, бледный зелёно-голубой.", stonesPerAspect:5, maxAspects:1, aspects:["perseverance"], icon:"icons/zircon.png" },
+  { id:"citrine", name:"Цитрин", tier:50, cost:50, look:"Прозрачный, жёлто-коричневый.", stonesPerAspect:7, maxAspects:1, aspects:["tenacity"], icon:"icons/citrine.png" },
+  { id:"jasper", name:"Яшма", tier:50, cost:50, look:"Непрозрачная, синяя/чёрная/коричневая.", stonesPerAspect:5, maxAspects:1, aspects:["fortitude"], icon:"icons/jasper.png" },
+
+  // Тир 100 — правила (обычно 5, иногда 7)
+  { id:"amethyst", name:"Аметист", tier:100, cost:100, look:"Прозрачный, тёмно-фиолетовый.", stonesPerAspect:5, maxAspects:1, aspects:["resistance"], icon:"icons/amethyst.png" },
+  { id:"jet", name:"Гагат", tier:100, cost:100, look:"Непрозрачный, чёрный.", stonesPerAspect:5, maxAspects:1, aspects:["training"], icon:"icons/jet.png" },
+  { id:"garnet", name:"Гранат", tier:100, cost:100, look:"Прозрачный красный/зелёно-коричневый/фиолетовый.", stonesPerAspect:7, maxAspects:1, aspects:["luck"], icon:"icons/garnet.png" },
+  { id:"pearl", name:"Жемчуг", tier:100, cost:100, look:"Непрозрачный, переливчатый белый/жёлтый/розовый.", stonesPerAspect:5, maxAspects:1, aspects:["spirituality"], icon:"icons/pearl.png" },
+  { id:"coral", name:"Коралл", tier:100, cost:100, look:"Непрозрачный, тёмно-красный.", stonesPerAspect:5, maxAspects:1, aspects:["erudition"], icon:"icons/coral.png" },
+  { id:"jade", name:"Нефрит", tier:100, cost:100, look:"Полупрозрачный, светло-/тёмно-зелёный или белый.", stonesPerAspect:5, maxAspects:1, aspects:["resourcefulness"], icon:"icons/jade.png" },
+  { id:"tourmaline", name:"Турмалин", tier:100, cost:100, look:"Прозрачный, бледно-зелёный/синий/коричневый/красный.", stonesPerAspect:5, maxAspects:1, aspects:["vigilance"], icon:"icons/tourmaline.png" },
+  { id:"chrysoberyl", name:"Хризоберилл", tier:100, cost:100, look:"Прозрачный, жёлто-зелёный или светло-зелёный.", stonesPerAspect:5, maxAspects:1, aspects:["ruthlessness"], icon:"icons/chrysoberyl.png" },
+  { id:"spinel", name:"Шпинель", tier:100, cost:100, look:"Прозрачная, красная/красно-коричневая/тёмно-зелёная.", stonesPerAspect:7, maxAspects:1, aspects:["charm"], icon:"icons/spinel.png" },
+  { id:"amber", name:"Янтарь", tier:100, cost:100, look:"Прозрачный, жёлто-золотой.", stonesPerAspect:7, maxAspects:1, aspects:["incorporeality"], icon:"icons/amber.png" },
+
+  // Тир 500 — правила (3)
+  { id:"aquamarine", name:"Аквамарин", tier:500, cost:500, look:"Прозрачный, зелёно-голубой.", stonesPerAspect:3, maxAspects:1, aspects:["truth"], icon:"icons/aquamarine.png" },
+  { id:"alexandrite", name:"Александрит", tier:500, cost:500, look:"Прозрачный, тёмно-зелёный.", stonesPerAspect:3, maxAspects:1, aspects:["patience"], icon:"icons/alexandrite.png" },
+  { id:"blue_spinel", name:"Синяя шпинель", tier:500, cost:500, look:"Прозрачная, синяя.", stonesPerAspect:3, maxAspects:1, aspects:["might"], icon:"icons/blue_spinel.png" },
+  { id:"topaz", name:"Топаз", tier:500, cost:500, look:"Прозрачный, золотисто-жёлтый.", stonesPerAspect:3, maxAspects:1, aspects:["wit"], icon:"icons/topaz.png" },
+  { id:"peridot", name:"Хризолит", tier:500, cost:500, look:"Прозрачный, сочный оливково-зелёный.", stonesPerAspect:3, maxAspects:1, aspects:["steadfastness"], icon:"icons/peridot.png" },
+  { id:"black_pearl", name:"Чёрный жемчуг", tier:500, cost:500, look:"Непрозрачный, чисто чёрный.", stonesPerAspect:3, maxAspects:1, aspects:["sneakiness"], icon:"icons/black_pearl.png" },
+
+  // Тир 1000 — двойные аспекты (обычно 3, один 2)
+  { id:"opal", name:"Опал", tier:1000, cost:1000, look:"Полупрозрачный, голубой с зелёными и золотыми вкраплениями.", stonesPerAspect:3, maxAspects:2, aspects:["wit","charm"], icon:"icons/opal.png" },
+  { id:"star_ruby", name:"Звёздчатый рубин", tier:1000, cost:1000, look:"Полупрозрачный рубин с белёсой звездой в центре.", stonesPerAspect:3, maxAspects:2, aspects:["truth","erudition"], icon:"icons/star_ruby.png" },
+  { id:"star_sapphire", name:"Звёздчатый сапфир", tier:1000, cost:1000, look:"Полупрозрачный синий сапфир с белёсой звездой в центре.", stonesPerAspect:3, maxAspects:2, aspects:["patience","spirituality"], icon:"icons/star_sapphire.png" },
+  { id:"yellow_sapphire", name:"Жёлтый сапфир", tier:1000, cost:1000, look:"Прозрачный, огненно-жёлтый или жёлто-зелёный.", stonesPerAspect:3, maxAspects:2, aspects:["sneakiness","incorporeality"], icon:"icons/yellow_sapphire.png" },
+  { id:"emerald", name:"Изумруд", tier:1000, cost:1000, look:"Прозрачный, насыщенный ярко-зелёный.", stonesPerAspect:3, maxAspects:2, aspects:["might","training"], icon:"icons/emerald.png" },
+  { id:"fire_opal", name:"Огненный опал", tier:1000, cost:1000, look:"Полупрозрачный, огненно-красный.", stonesPerAspect:3, maxAspects:2, aspects:["steadfastness","resistance"], icon:"icons/fire_opal.png" },
+  { id:"black_opal", name:"Чёрный опал", tier:1000, cost:1000, look:"Полупрозрачный, тёмно-зелёный с чёрными и золотыми пятнышками.", stonesPerAspect:2, maxAspects:2, aspects:["courage","fortitude"], icon:"icons/black_opal.png" },
+  { id:"blue_sapphire", name:"Голубой сапфир", tier:1000, cost:1000, look:"Прозрачный, от бело-голубого до умеренно синего.", stonesPerAspect:3, maxAspects:2, aspects:["mercy","generosity"], icon:"icons/blue_sapphire.png" },
+
+  // Тир 5000 — мега-аспекты (2)
+  { id:"black_sapphire", name:"Чёрный сапфир", tier:5000, cost:5000, look:"Полупрозрачный, блестящий чёрный с яркими вкраплениями.", stonesPerAspect:2, maxAspects:1, aspects:["valor"], icon:"icons/black_sapphire.png" },
+  { id:"hyacinth", name:"Гиацинт", tier:5000, cost:5000, look:"Прозрачный, огненно-оранжевый.", stonesPerAspect:2, maxAspects:1, aspects:["attraction"], icon:"icons/hyacinth.png" },
+  { id:"ruby", name:"Рубин", tier:5000, cost:5000, look:"Прозрачный, чисто красный с переходом в тёмно-алый.", stonesPerAspect:2, maxAspects:1, aspects:["objectivity"], icon:"icons/ruby.png" },
+  { id:"diamond", name:"Алмаз", tier:5000, cost:5000, look:"Прозрачный: сине-белый/ярко-жёлтый/розовый/коричневый/синий.", stonesPerAspect:2, maxAspects:1, aspects:["tranquility"], icon:"icons/diamond.png" },
+];
+
+/* =========================================================
+   4) СОСТОЯНИЕ (localStorage) + кастомные добавления
+   ========================================================= */
+
+const LS_KEY = "jewelry_crafting_state_v2";
+
+const DEFAULT_STATE = {
+  // Количество камней/материалов в инвентаре:
+  inventory: {
+    gems: {},       // { gemId: number }
+    materials: {},  // { materialId: number }  (в "слитках/единицах")
+  },
+
+  // Журнал изделий:
+  journal: [],
+
+  // Кастомные записи:
+  custom: {
+    gems: [],    // пользовательские самоцветы
+    aspects: [], // пользовательские аспекты
+  },
+
+  // Последний контекст крафта (чтобы переходы работали):
+  craftDraft: {
+    mode: "gem", // "gem" | "aspect"
+    itemTypeId: "ring",
+    materialId: "gold",
+    gemId: "",
+    aspectIds: [], // выбранные аспекты (1..max)
+    lockedAspectId: "", // если пришли из карточки аспекта
+  }
+};
+
+let state = loadState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return structuredClone(DEFAULT_STATE);
+    const parsed = JSON.parse(raw);
+    return mergeDefaults(parsed, DEFAULT_STATE);
+  }catch{
+    return structuredClone(DEFAULT_STATE);
+  }
+}
+function saveState(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+  updateTopPill();
+}
+function mergeDefaults(obj, defaults){
+  if(obj === null || typeof obj !== "object") return structuredClone(defaults);
+  const out = Array.isArray(defaults) ? [] : {};
+  for(const k of Object.keys(defaults)){
+    if(obj[k] === undefined){
+      out[k] = structuredClone(defaults[k]);
+    }else if(defaults[k] && typeof defaults[k] === "object" && !Array.isArray(defaults[k])){
+      out[k] = mergeDefaults(obj[k], defaults[k]);
+    }else{
+      out[k] = obj[k];
+    }
+  }
+  // сохраняем лишние поля тоже (если появятся в будущих версиях)
+  for(const k of Object.keys(obj)){
+    if(out[k] === undefined) out[k] = obj[k];
+  }
+  return out;
+}
+
+/* =========================================================
+   5) УТИЛИТЫ, СБОР СВОДНЫХ КАТАЛОГОВ, КРОСС-ССЫЛКИ
+   ========================================================= */
+
+function slugifyRu(str){
+  return String(str).toLowerCase()
+    .replace(/ё/g,"е")
+    .replace(/[^a-z0-9а-я\s_-]/g,"")
+    .trim()
+    .replace(/\s+/g,"_");
+}
+function fmtTime(min){
+  if(min < 60) return `${min} мин`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if(m === 0) return `${h} ч`;
+  return `${h} ч ${m} мин`;
+}
+function moneyToGold(unitCost){
+  // стоимость оправы считается в "зм", но в таблице есть "мм/см" (медь/серебро и др.)
+  // Чтобы не ломать логику, показываем как "10 мм" и т.п., а золото-сумму считаем только по "зм".
+  // В приложении: итоговая стоимость в "зм" = (unit == 'зм' ? value : 0) * units.
+  return (unitCost.unit === "зм") ? unitCost.value : 0;
+}
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.style.display = "block";
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>{ el.style.display="none"; }, 2200);
+}
+
+function getAllAspects(){
+  // Добавляем "бытовые эффекты" (из tier 10 gems), как отдельные аспекты
+  const base = ASPECTS_BASE.map(a => ({...a, kind:"rule"}));
+  const gemsAll = getAllGemsRaw();
+  const flavor = gemsAll
+    .filter(g => Array.isArray(g.effects) && g.effects.length)
+    .map(g => ({
+      id:`fx_${g.id}`,
+      kind:"flavor",
+      group:"Бытовые эффекты",
+      sub:`Тир ${g.tier}`,
+      name:`${g.name}: эффект`,
+      effect: g.effects[0],
+      fromGemId: g.id,
+    }));
+
+  // Кастомные аспекты
+  const custom = (state.custom.aspects || []).map(a => ({...a, kind:"custom"}));
+
+  // Объединяем
+  const all = [...base, ...flavor, ...custom];
+
+  // Быстрый индекс
+  const byId = new Map(all.map(a => [a.id, a]));
+  return { list: all, byId };
+}
+
+function getAllGemsRaw(){
+  // Встроенные + кастомные
+  const custom = (state.custom.gems || []).map(g => ({...g, isCustom:true}));
+  return [...GEMS_BASE.map(g=>({...g, isCustom:false})), ...custom];
+}
+
+function getAllGems(){
+  // Нормализуем: встроенные эффекты -> fx_aspectIds
+  const { byId: aspectsById } = getAllAspects();
+  const list = getAllGemsRaw().map(g => {
+    const out = {...g};
+
+    // Для бытовых камней: создаём привязку к fx_... аспекту
+    if(out.effects && out.effects.length){
+      out.aspects = [`fx_${out.id}`]; // один "аспект-эффект"
+      out.aspectKind = "flavor";
+    }else{
+      out.aspects = Array.isArray(out.aspects) ? out.aspects.slice() : [];
+      out.aspectKind = "rule";
+    }
+
+    // Почистим аспекты: оставим только существующие
+    out.aspects = out.aspects.filter(aid => aspectsById.has(aid));
+    return out;
+  });
+
+  // Индексы/кросс-референсы
+  const byId = new Map(list.map(g => [g.id, g]));
+  const aspectToGems = new Map(); // aspectId -> [{gemId, tier, stonesPerAspect, maxAspects}]
+  for(const g of list){
+    for(const aid of g.aspects){
+      if(!aspectToGems.has(aid)) aspectToGems.set(aid, []);
+      aspectToGems.get(aid).push({
+        gemId: g.id,
+        gemName: g.name,
+        tier: g.tier,
+        cost: g.cost,
+        stonesPerAspect: g.stonesPerAspect,
+        maxAspects: g.maxAspects,
+      });
+    }
+  }
+
+  // Отсортируем обратные связи: сначала дешевле, потом tier
+  for(const [aid, arr] of aspectToGems.entries()){
+    arr.sort((a,b)=> (a.cost-b.cost) || (a.tier-b.tier) || a.gemName.localeCompare(b.gemName,"ru"));
+  }
+
+  return { list, byId, aspectToGems };
+}
+
+function getMaterials(){
+  const byId = new Map(MATERIALS.map(m => [m.id, m]));
+  const groups = [...new Set(MATERIALS.map(m=>m.group))];
+  return { list: MATERIALS.slice(), byId, groups };
+}
+
+function getItemTypes(){
+  const byId = new Map(ITEM_TYPES.map(t=>[t.id,t]));
+  return { list: ITEM_TYPES.slice(), byId };
+}
+
+function invGet(map, id){ return Math.max(0, Number(map[id]||0)); }
+function invAdd(map, id, delta){
+  const n = invGet(map,id) + delta;
+  map[id] = Math.max(0, Math.floor(n));
+}
+
+function updateTopPill(){
+  const gemsCount = Object.values(state.inventory.gems||{}).reduce((a,b)=>a+Math.max(0,Number(b||0)),0);
+  const matsCount = Object.values(state.inventory.materials||{}).reduce((a,b)=>a+Math.max(0,Number(b||0)),0);
+  document.getElementById("pillGems").textContent = String(gemsCount);
+  document.getElementById("pillMats").textContent = String(matsCount);
+}
+
+/* =========================================================
+   6) НАВИГАЦИЯ
+   ========================================================= */
+
+const TABS = [
+  { id:"gems", label:"Самоцветы" },
+  { id:"aspects", label:"Аспекты" },
+  { id:"inventory", label:"Инвентарь" },
+  { id:"craft", label:"Крафт" },
+  { id:"journal", label:"Журнал изделий" },
+  { id:"state", label:"Экспорт / импорт" },
+];
+
+let activeTab = "gems";
+
+function initTabs(){
+  const el = document.getElementById("tabs");
+  el.innerHTML = "";
+  for(const t of TABS){
+    const b = document.createElement("button");
+    b.className = "tab";
+    b.textContent = t.label;
+    b.onclick = () => showTab(t.id);
+    el.appendChild(b);
+  }
+}
+function showTab(id){
+  activeTab = id;
+  for(const t of TABS){
+    const sec = document.getElementById(`sec_${t.id}`);
+    sec.classList.toggle("active", t.id === id);
+  }
+  [...document.querySelectorAll(".tab")].forEach((b,i)=>{
+    b.classList.toggle("active", TABS[i].id === id);
+  });
+  render();
+}
+
+/* =========================================================
+   7) ФИЛЬТРЫ UI (храним только в памяти)
+   ========================================================= */
+
+const ui = {
+  gems: { q:"", tier:"", aspect:"", onlyOwned:false },
+  aspects: { q:"", group:"", sub:"", onlyAvailable:false },
+  journal: { q:"", sort:"new" },
+};
+
+/* =========================================================
+   8) ДЕФОЛТЫ И РЕНДЕР
+   ========================================================= */
+
+initTabs();
+updateTopPill();
+showTab(activeTab);
+
+function render(){
+  renderGems();
+  renderAspects();
+  renderInventory();
+  renderCraft();
+  renderJournal();
+  renderState();
+  saveState();
+}
+
+/* =========================================================
+   9) СЕКЦИЯ: САМОЦВЕТЫ (каталог) + фильтры + добавление кастомных
+   ========================================================= */
+
+function renderGems(){
+  const root = document.getElementById("sec_gems");
+  const { list:gems } = getAllGems();
+  const { list:aspects, byId:aspectsById } = getAllAspects();
+
+  const tiers = [10,50,100,500,1000,5000];
+
+  const aspectOptions = aspects
+    .slice()
+    .sort((a,b)=> (a.group.localeCompare(b.group,"ru")) || (a.name.localeCompare(b.name,"ru")))
+    .map(a => `<option value="${a.id}">${a.group}${a.sub?` • ${a.sub}`:""} — ${a.name}</option>`)
+    .join("");
+
+  root.innerHTML = `
+    <div class="hrow">
+      <div class="col" style="flex:1">
+        <h2>Каталог самоцветов</h2>
+        <div class="sub">Карточки с иконками, тирами, требованиями по количеству камней и кросс-ссылками на аспекты.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hrow">
+        <div class="field">
+          <label>Поиск</label>
+          <input id="g_q" placeholder="Название, описание, аспект..." value="${escapeHtml(ui.gems.q)}">
+        </div>
+        <div class="field small">
+          <label>Тир (цена камня)</label>
+          <select id="g_tier">
+            <option value="">Все</option>
+            ${tiers.map(t=>`<option value="${t}" ${ui.gems.tier==String(t)?"selected":""}>${t} зм</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label>Аспект / эффект</label>
+          <select id="g_aspect">
+            <option value="">Все</option>
+            ${aspectOptions}
+          </select>
+        </div>
+        <div class="field tiny">
+          <label>Фильтр</label>
+          <label class="checkbox">
+            <input type="checkbox" id="g_owned" ${ui.gems.onlyOwned ? "checked":""}>
+            Только в инвентаре
+          </label>
+        </div>
+      </div>
+      <div class="note">
+        Иконки для встроенных камней ожидаются по путям <span class="mono">icons/&lt;id&gt;.png</span>.
+        Если иконки нет — будет пустой контейнер, функционал сохранится.
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="grid" id="g_grid"></div>
+
+    <div class="sep"></div>
+
+    <div class="panel">
+      <h3>Добавить новый самоцвет</h3>
+      <div class="sub">Кастомные камни сохраняются в состоянии (localStorage/экспорт JSON). Иконку можно задать файлом из папки icons или загрузить (встроится в состояние).</div>
+      <div class="hrow">
+        <div class="field small">
+          <label>Название</label>
+          <input id="cg_name" placeholder="Например: Солнечный камень">
+        </div>
+        <div class="field tiny">
+          <label>Тир</label>
+          <select id="cg_tier">
+            ${tiers.map(t=>`<option value="${t}">${t} зм</option>`).join("")}
+          </select>
+        </div>
+        <div class="field tiny">
+          <label>Камней на аспект</label>
+          <input id="cg_spa" type="number" min="1" step="1" value="3">
+        </div>
+        <div class="field tiny">
+          <label>Аспектов в украшении</label>
+          <select id="cg_max">
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Внешний вид (кратко)</label>
+          <input id="cg_look" placeholder="Описание внешнего вида">
+        </div>
+      </div>
+
+      <div class="hrow">
+        <div class="field">
+          <label>Привязанные аспекты (для правил)</label>
+          <select id="cg_aspects" multiple size="5">
+            ${aspects
+              .filter(a => a.kind !== "flavor") // не даём привязывать к fx_* (это для бытовых)
+              .sort((a,b)=> (a.group.localeCompare(b.group,"ru")) || (a.name.localeCompare(b.name,"ru")))
+              .map(a=>`<option value="${a.id}">${a.group}${a.sub?` • ${a.sub}`:""} — ${a.name}</option>`).join("")}
+          </select>
+          <div class="sub">Если это бытовой камень — оставь пустым и заполни поле “Бытовой эффект”.</div>
+        </div>
+        <div class="field">
+          <label>Бытовой эффект (опционально)</label>
+          <input id="cg_fx" placeholder="Текст эффекта (если это бытовой камень)">
+
+          <div style="height:10px"></div>
+
+          <label>Иконка из папки icons (имя файла)</label>
+          <input id="cg_iconFile" placeholder="например: my_gem.png">
+
+          <div style="height:10px"></div>
+
+          <label>Или загрузить PNG (встроится в состояние)</label>
+          <input id="cg_iconUpload" type="file" accept="image/png,image/webp,image/jpeg">
+        </div>
+      </div>
+
+      <div class="btnRow">
+        <button class="btn good" id="cg_add">Добавить самоцвет</button>
+        <button class="btn secondary" id="cg_clear">Очистить форму</button>
+      </div>
+    </div>
+  `;
+
+  // bind filters
+  root.querySelector("#g_aspect").value = ui.gems.aspect || "";
+  root.querySelector("#g_q").oninput = (e)=>{ ui.gems.q = e.target.value; draw(); };
+  root.querySelector("#g_tier").onchange = (e)=>{ ui.gems.tier = e.target.value; draw(); };
+  root.querySelector("#g_aspect").onchange = (e)=>{ ui.gems.aspect = e.target.value; draw(); };
+  root.querySelector("#g_owned").onchange = (e)=>{ ui.gems.onlyOwned = e.target.checked; draw(); };
+
+  // custom gem form
+  const iconUpload = root.querySelector("#cg_iconUpload");
+  let uploadedDataUrl = "";
+  iconUpload.onchange = async ()=>{
+    const f = iconUpload.files && iconUpload.files[0];
+    uploadedDataUrl = "";
+    if(!f) return;
+    uploadedDataUrl = await fileToDataURL(f);
+    toast("Иконка загружена (будет встроена в состояние).");
+  };
+
+  root.querySelector("#cg_clear").onclick = ()=>{
+    root.querySelector("#cg_name").value = "";
+    root.querySelector("#cg_look").value = "";
+    root.querySelector("#cg_spa").value = "3";
+    root.querySelector("#cg_max").value = "1";
+    root.querySelector("#cg_fx").value = "";
+    root.querySelector("#cg_iconFile").value = "";
+    root.querySelector("#cg_aspects").selectedIndex = -1;
+    root.querySelector("#cg_iconUpload").value = "";
+    uploadedDataUrl = "";
+  };
+
+  root.querySelector("#cg_add").onclick = ()=>{
+    const name = root.querySelector("#cg_name").value.trim();
+    if(!name) return toast("Нужно указать название самоцвета.");
+
+    const tier = Number(root.querySelector("#cg_tier").value);
+    const spa = Math.max(1, Math.floor(Number(root.querySelector("#cg_spa").value || 1)));
+    const max = Math.max(1, Math.min(2, Math.floor(Number(root.querySelector("#cg_max").value || 1))));
+    const look = root.querySelector("#cg_look").value.trim();
+    const fx = root.querySelector("#cg_fx").value.trim();
+    const iconFile = root.querySelector("#cg_iconFile").value.trim();
+
+    // id
+    let id = slugifyRu(name);
+    if(!id) id = "custom_gem_" + Math.random().toString(16).slice(2,8);
+
+    // ensure unique
+    const { byId:gemsById } = getAllGems();
+    if(gemsById.has(id)) id = id + "_" + Math.random().toString(16).slice(2,6);
+
+    // aspects
+    const sel = [...root.querySelector("#cg_aspects").selectedOptions].map(o=>o.value);
+    const aspectsChosen = sel.slice(0, max);
+    const isFlavor = !aspectsChosen.length && !!fx;
+
+    if(!isFlavor && !aspectsChosen.length){
+      return toast("Выбери аспекты (или заполни бытовой эффект).");
+    }
+    if(isFlavor && !fx){
+      return toast("Для бытового камня нужен текст эффекта.");
+    }
+
+    let icon = "";
+    if(uploadedDataUrl) icon = uploadedDataUrl;
+    else if(iconFile) icon = `icons/${iconFile}`;
+    else icon = `icons/${id}.png`;
+
+    const newGem = {
+      id, name, tier, cost:tier,
+      look,
+      stonesPerAspect: spa,
+      maxAspects: max,
+      icon,
+    };
+
+    if(isFlavor){
+      newGem.effects = [fx];
+    }else{
+      newGem.aspects = aspectsChosen;
+    }
+
+    state.custom.gems.push(newGem);
+    toast("Самоцвет добавлен.");
+    saveState();
+    render();
+  };
+
+  function draw(){
+    const grid = root.querySelector("#g_grid");
+    grid.innerHTML = "";
+
+    const q = ui.gems.q.trim().toLowerCase();
+    const tierFilter = ui.gems.tier ? Number(ui.gems.tier) : null;
+    const aspectFilter = ui.gems.aspect || "";
+    const onlyOwned = !!ui.gems.onlyOwned;
+
+    const filtered = gems.filter(g=>{
+      if(tierFilter && g.tier !== tierFilter) return false;
+      if(onlyOwned && invGet(state.inventory.gems, g.id) <= 0) return false;
+
+      const aNames = g.aspects.map(aid=>{
+        const a = aspectsById.get(aid);
+        return a ? `${a.group} ${a.sub||""} ${a.name} ${a.effect}` : "";
+      }).join(" ").toLowerCase();
+
+      if(aspectFilter && !g.aspects.includes(aspectFilter)) return false;
+
+      if(q){
+        const hay = `${g.name} ${g.look||""} ${g.tier} ${g.stonesPerAspect} ${aNames}`.toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    // Sort: by tier, then name
+    filtered.sort((a,b)=> (a.tier-b.tier) || a.name.localeCompare(b.name,"ru"));
+
+    for(const g of filtered){
+      const invQty = invGet(state.inventory.gems, g.id);
+      const tierRule = TIER_RULES[g.tier];
+      const aspectBadges = g.aspects.map(aid=>{
+        const a = aspectsById.get(aid);
+        if(!a) return "";
+        return `<span class="badge"><span class="dot"></span>${escapeHtml(a.name)}<span class="tag">${escapeHtml(a.group)}</span></span>`;
+      }).join("");
+
+      const ownedBadge = invQty > 0
+        ? `<span class="badge ok"><span class="dot"></span>В инвентаре: ${invQty}</span>`
+        : `<span class="badge"><span class="dot"></span>В инвентаре: 0</span>`;
+
+      const iconHtml = g.icon
+        ? `<img src="${escapeHtml(g.icon)}" alt="">`
+        : `<div class="muted" style="font-size:11px">нет иконки</div>`;
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="row between">
+          <div class="row" style="gap:12px">
+            <div class="icon48">${iconHtml}</div>
+            <div class="col">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+                <div class="v" style="font-weight:750">${escapeHtml(g.name)}</div>
+                <span class="badge warn"><span class="dot"></span>Тир ${g.tier} (${g.cost} зм)</span>
+              </div>
+              <div class="sub">${escapeHtml(g.look||"")}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          ${ownedBadge}
+          <span class="badge"><span class="dot"></span>Камней на аспект: ${g.stonesPerAspect}</span>
+          <span class="badge"><span class="dot"></span>Аспектов в украшении: ${g.maxAspects}</span>
+          <span class="badge"><span class="dot"></span>Инкрустация: Сл ${tierRule.inlayDC}, ${fmtTime(tierRule.inlayTimeMin)}</span>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="k">Аспекты / эффекты</div>
+          <div>${aspectBadges || `<span class="muted">Нет привязанных аспектов</span>`}</div>
+        </div>
+
+        <div class="btnRow">
+          <button class="btn secondary" data-act="minus">-1</button>
+          <button class="btn secondary" data-act="plus">+1</button>
+          <button class="btn" data-act="craft">Создать изделие</button>
+        </div>
+      `;
+
+      card.querySelector('[data-act="minus"]').onclick = ()=>{
+        invAdd(state.inventory.gems, g.id, -1);
+        toast("Изменено количество в инвентаре.");
+        saveState();
+        draw();
+        updateTopPill();
+      };
+      card.querySelector('[data-act="plus"]').onclick = ()=>{
+        invAdd(state.inventory.gems, g.id, +1);
+        toast("Добавлено в инвентарь.");
+        saveState();
+        draw();
+        updateTopPill();
+      };
+      card.querySelector('[data-act="craft"]').onclick = ()=>{
+        // Переход в крафт: фиксируем gem, сбрасываем аспекты, режим "gem"
+        state.craftDraft.mode = "gem";
+        state.craftDraft.gemId = g.id;
+        state.craftDraft.lockedAspectId = "";
+        state.craftDraft.aspectIds = [];
+        saveState();
+        showTab("craft");
+      };
+
+      grid.appendChild(card);
+    }
+
+    if(!filtered.length){
+      grid.innerHTML = `<div class="panel"><div class="sub">Ничего не найдено по фильтрам.</div></div>`;
+    }
+  }
+
+  draw();
+}
+
+/* =========================================================
+   10) СЕКЦИЯ: АСПЕКТЫ (каталог) + фильтры + доступность + крафт
+   ========================================================= */
+
+function renderAspects(){
+  const root = document.getElementById("sec_aspects");
+  const { list: aspects, byId: aspectsById } = getAllAspects();
+  const { aspectToGems, byId: gemsById } = getAllGems();
+
+  // Уникальные группы/подкатегории
+  const groups = [...new Set(aspects.map(a=>a.group))].sort((a,b)=>a.localeCompare(b,"ru"));
+
+  const subsByGroup = new Map();
+  for(const a of aspects){
+    if(!subsByGroup.has(a.group)) subsByGroup.set(a.group, new Set());
+    subsByGroup.get(a.group).add(a.sub || "");
+  }
+
+  function canCraftAspectSingle(aspectId){
+    // "доступность" = есть хотя бы один подходящий камень с qty >= stonesPerAspect
+    const providers = aspectToGems.get(aspectId) || [];
+    for(const p of providers){
+      const qty = invGet(state.inventory.gems, p.gemId);
+      if(qty >= p.stonesPerAspect) return true;
+    }
+    return false;
+  }
+
+  root.innerHTML = `
+    <div class="hrow">
+      <div class="col" style="flex:1">
+        <h2>Каталог аспектов</h2>
+        <div class="sub">Карточки аспектов с обратными ссылками на самоцветы. Доступные аспекты (по инвентарю) дают кнопку “Создать изделие”.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hrow">
+        <div class="field">
+          <label>Поиск</label>
+          <input id="a_q" placeholder="Название, эффект, самоцвет..." value="${escapeHtml(ui.aspects.q)}">
+        </div>
+        <div class="field small">
+          <label>Категория</label>
+          <select id="a_group">
+            <option value="">Все</option>
+            ${groups.map(g=>`<option value="${escapeHtml(g)}" ${ui.aspects.group===g?"selected":""}>${escapeHtml(g)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field small">
+          <label>Подкатегория</label>
+          <select id="a_sub">
+            <option value="">Все</option>
+          </select>
+        </div>
+        <div class="field tiny">
+          <label>Фильтр</label>
+          <label class="checkbox">
+            <input type="checkbox" id="a_available" ${ui.aspects.onlyAvailable ? "checked":""}>
+            Только доступные
+          </label>
+        </div>
+      </div>
+      <div class="note">
+        Доступность считается по правилу: “есть камень, дающий аспект, и его количество в инвентаре не меньше <span class="mono">камней на аспект</span>”.
+      </div>
+    </div>
+
+    <div class="sep"></div>
+    <div class="grid" id="a_grid"></div>
+
+    <div class="sep"></div>
+
+    <div class="panel">
+      <h3>Добавить новый аспект</h3>
+      <div class="sub">Кастомные аспекты сохраняются в состояние. Привязки к самоцветам задаются в форме добавления самоцвета (или можно добавить аспект, затем обновить/создать самоцвет).</div>
+      <div class="hrow">
+        <div class="field small">
+          <label>Название</label>
+          <input id="ca_name" placeholder="Например: Решимость">
+        </div>
+        <div class="field small">
+          <label>Категория</label>
+          <input id="ca_group" placeholder="Например: Спасброски">
+        </div>
+        <div class="field small">
+          <label>Подкатегория</label>
+          <input id="ca_sub" placeholder="Например: Ментальные">
+        </div>
+      </div>
+      <div class="field">
+        <label>Описание эффекта</label>
+        <input id="ca_effect" placeholder="Текст эффекта">
+      </div>
+      <div class="btnRow">
+        <button class="btn good" id="ca_add">Добавить аспект</button>
+        <button class="btn secondary" id="ca_clear">Очистить форму</button>
+      </div>
+    </div>
+  `;
+
+  // bind
+  const subSelect = root.querySelector("#a_sub");
+  function fillSubs(){
+    const g = root.querySelector("#a_group").value;
+    const current = ui.aspects.sub || "";
+    const set = subsByGroup.get(g) || new Set([""]);
+    const subs = [...set].sort((a,b)=>a.localeCompare(b,"ru"));
+    subSelect.innerHTML = `<option value="">Все</option>` + subs.filter(s=>s!=="").map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+    if(subs.includes(current)) subSelect.value = current;
+    else subSelect.value = "";
+  }
+  fillSubs();
+
+  root.querySelector("#a_q").oninput = (e)=>{ ui.aspects.q = e.target.value; draw(); };
+  root.querySelector("#a_group").onchange = (e)=>{ ui.aspects.group = e.target.value; ui.aspects.sub = ""; fillSubs(); draw(); };
+  root.querySelector("#a_sub").onchange = (e)=>{ ui.aspects.sub = e.target.value; draw(); };
+  root.querySelector("#a_available").onchange = (e)=>{ ui.aspects.onlyAvailable = e.target.checked; draw(); };
+
+  // custom aspect form
+  root.querySelector("#ca_clear").onclick = ()=>{
+    root.querySelector("#ca_name").value = "";
+    root.querySelector("#ca_group").value = "";
+    root.querySelector("#ca_sub").value = "";
+    root.querySelector("#ca_effect").value = "";
+  };
+  root.querySelector("#ca_add").onclick = ()=>{
+    const name = root.querySelector("#ca_name").value.trim();
+    const group = root.querySelector("#ca_group").value.trim();
+    const sub = root.querySelector("#ca_sub").value.trim();
+    const effect = root.querySelector("#ca_effect").value.trim();
+    if(!name || !group || !effect) return toast("Для аспекта нужны: название, категория и описание.");
+
+    let id = slugifyRu(name);
+    if(!id) id = "custom_aspect_" + Math.random().toString(16).slice(2,8);
+
+    const { byId } = getAllAspects();
+    if(byId.has(id)) id = id + "_" + Math.random().toString(16).slice(2,6);
+
+    state.custom.aspects.push({ id, group, sub, name, effect });
+    toast("Аспект добавлен.");
+    saveState();
+    render();
+  };
+
+  function draw(){
+    const grid = root.querySelector("#a_grid");
+    grid.innerHTML = "";
+
+    const q = ui.aspects.q.trim().toLowerCase();
+    const group = ui.aspects.group || "";
+    const sub = ui.aspects.sub || "";
+    const onlyAvail = !!ui.aspects.onlyAvailable;
+
+    // сортируем: сначала по group, потом по name
+    const sorted = aspects.slice().sort((a,b)=>{
+      return (a.group.localeCompare(b.group,"ru"))
+        || ((a.sub||"").localeCompare(b.sub||"","ru"))
+        || (a.name.localeCompare(b.name,"ru"));
+    });
+
+    const filtered = sorted.filter(a=>{
+      if(group && a.group !== group) return false;
+      if(sub && (a.sub||"") !== sub) return false;
+      const available = canCraftAspectSingle(a.id);
+      if(onlyAvail && !available) return false;
+
+      if(q){
+        // добавляем в поиск имена поставщиков (гемов)
+        const providers = (aspectToGems.get(a.id)||[]).map(p=>p.gemName).join(" ");
+        const hay = `${a.group} ${(a.sub||"")} ${a.name} ${a.effect} ${providers}`.toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    for(const a of filtered){
+      const available = canCraftAspectSingle(a.id);
+      const providers = aspectToGems.get(a.id) || [];
+
+      const provHtml = providers.length
+        ? providers.map(p=>{
+            const owned = invGet(state.inventory.gems, p.gemId);
+            const ok = owned >= p.stonesPerAspect;
+            return `
+              <span class="badge ${ok?"ok":""}">
+                <span class="dot"></span>${escapeHtml(p.gemName)} • тир ${p.tier} • нужно ${p.stonesPerAspect} • есть ${owned}
+              </span>`;
+          }).join("")
+        : `<span class="muted">Нет привязанных самоцветов</span>`;
+
+      const includesHtml = a.isMega
+        ? `<div class="note" style="margin-top:10px">
+             <div class="k">Включает аспекты</div>
+             <div style="margin-top:6px">
+               ${(a.includes||[]).map(id=>{
+                  const x = aspectsById.get(id);
+                  return x ? `<span class="badge"><span class="dot"></span>${escapeHtml(x.name)}<span class="tag">${escapeHtml(x.group)}</span></span>` : "";
+                }).join("")}
+             </div>
+           </div>`
+        : "";
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="row between">
+          <div class="col" style="gap:2px">
+            <div class="v" style="font-weight:780">${escapeHtml(a.name)}</div>
+            <div class="sub">${escapeHtml(a.group)}${a.sub?` • ${escapeHtml(a.sub)}`:""}</div>
+          </div>
+          <div>
+            ${available
+              ? `<span class="badge ok"><span class="dot"></span>Доступен</span>`
+              : `<span class="badge"><span class="dot"></span>Недоступен</span>`}
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="sub">${escapeHtml(a.effect)}</div>
+
+        ${includesHtml}
+
+        <div style="margin-top:12px">
+          <div class="k">Самоцветы, дающие аспект</div>
+          <div style="margin-top:6px">${provHtml}</div>
+        </div>
+
+        <div class="btnRow">
+          ${available ? `<button class="btn" data-act="craft">Создать изделие</button>` : ``}
+          <button class="btn secondary" data-act="toGems">Показать самоцветы</button>
+        </div>
+      `;
+
+      const btnCraft = card.querySelector('[data-act="craft"]');
+      if(btnCraft){
+        btnCraft.onclick = ()=>{
+          // Переход в крафт: режим aspect, фиксируем lockedAspectId
+          state.craftDraft.mode = "aspect";
+          state.craftDraft.lockedAspectId = a.id;
+          state.craftDraft.aspectIds = [a.id];
+          state.craftDraft.gemId = ""; // будет выбран из подходящих
+          saveState();
+          showTab("craft");
+        };
+      }
+
+      card.querySelector('[data-act="toGems"]').onclick = ()=>{
+        ui.gems.aspect = a.id;
+        ui.gems.q = "";
+        ui.gems.tier = "";
+        ui.gems.onlyOwned = false;
+        saveState();
+        showTab("gems");
+      };
+
+      grid.appendChild(card);
+    }
+
+    if(!filtered.length){
+      grid.innerHTML = `<div class="panel"><div class="sub">Ничего не найдено по фильтрам.</div></div>`;
+    }
+  }
+
+  draw();
+}
+
+/* =========================================================
+   11) СЕКЦИЯ: ИНВЕНТАРЬ (камни + материалы) + крафт из инвентаря
+   ========================================================= */
+
+function renderInventory(){
+  const root = document.getElementById("sec_inventory");
+  const { list:gems, byId:gemsById } = getAllGems();
+  const { list:aspects, byId:aspectsById } = getAllAspects();
+  const { list:materials, byId:materialsById } = getMaterials();
+
+  const ownedGems = Object.entries(state.inventory.gems||{})
+    .map(([id,qty])=>({ id, qty: invGet(state.inventory.gems,id) }))
+    .filter(x=>x.qty>0 && gemsById.has(x.id))
+    .sort((a,b)=> (gemsById.get(a.id).tier - gemsById.get(b.id).tier) || (gemsById.get(a.id).name.localeCompare(gemsById.get(b.id).name,"ru")));
+
+  root.innerHTML = `
+    <div class="hrow">
+      <div class="col" style="flex:1">
+        <h2>Инвентарь</h2>
+        <div class="sub">Тут хранится количество самоцветов и материалов (в слитках/единицах). Отсюда можно перейти в крафт.</div>
+      </div>
+      <div class="btnRow">
+        <button class="btn" id="inv_toCraft">Создать изделие</button>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="panel">
         <h3>Самоцветы</h3>
-        <div class="small">Количество по каждому камню. Кастомные камни появляются автоматически.</div>
-        <hr>
-        <div class="grid" id="invGems"></div>
+        <table class="miniTable">
+          <thead>
+            <tr>
+              <th>Самоцвет</th>
+              <th class="right">Кол-во</th>
+              <th class="right">Действия</th>
+            </tr>
+          </thead>
+          <tbody id="inv_gems_tbody"></tbody>
+        </table>
+        <div class="note" style="margin-top:10px">
+          Подсказка: добавлять/убавлять камни можно также прямо из каталога самоцветов.
+        </div>
       </div>
-      <div class="card">
-        <h3>Материалы</h3>
-        <div class="small">Единицы/слитки материалов. Списываются по смете при крафте.</div>
-        <hr>
-        <div class="grid" id="invMaterials"></div>
+
+      <div class="panel">
+        <h3>Материалы оправы</h3>
+        <div class="sub">Количество хранится в “слитках/единицах”. Для расчёта цены в зм учитываются только материалы, у которых стоимость в зм.</div>
+        <table class="miniTable" style="margin-top:10px">
+          <thead>
+            <tr>
+              <th>Материал</th>
+              <th class="right">Есть (ед.)</th>
+            </tr>
+          </thead>
+          <tbody id="inv_mat_tbody"></tbody>
+        </table>
       </div>
     </div>
-  </section>
+  `;
 
-  <!-- Крафт -->
-  <section id="tab-craft" class="hidden">
-    <div class="card">
-      <h3>Крафт</h3>
-      <div class="small">Открой конструктор и собери изделие: база + смета материалов + (самоцветы ИЛИ аспекты).</div>
-      <div class="toolbar">
-        <button id="craftOpenBtn" class="primary" onclick="openCraft()" disabled>Создать изделие</button>
-        <div class="spacer"></div>
-        <div class="pill" id="craftHint">данные ещё грузятся</div>
+  root.querySelector("#inv_toCraft").onclick = ()=>{
+    state.craftDraft.mode = "gem";
+    state.craftDraft.lockedAspectId = "";
+    state.craftDraft.gemId = "";
+    state.craftDraft.aspectIds = [];
+    saveState();
+    showTab("craft");
+  };
+
+  // Gems table
+  const gbody = root.querySelector("#inv_gems_tbody");
+  if(!ownedGems.length){
+    gbody.innerHTML = `<tr><td colspan="3" class="muted">Пока нет самоцветов в инвентаре.</td></tr>`;
+  }else{
+    gbody.innerHTML = "";
+    for(const og of ownedGems){
+      const g = gemsById.get(og.id);
+      const aLabels = g.aspects.map(aid=>{
+        const a = aspectsById.get(aid);
+        return a ? a.name : "";
+      }).filter(Boolean).join(", ");
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>
+          <div style="display:flex; gap:10px; align-items:center">
+            <div class="icon48" style="width:40px;height:40px;border-radius:10px">
+              ${g.icon ? `<img src="${escapeHtml(g.icon)}" alt="" style="width:36px;height:36px">` : ""}
+            </div>
+            <div>
+              <div style="font-weight:750">${escapeHtml(g.name)} <span class="tag">тир ${g.tier}</span></div>
+              <div class="sub">${escapeHtml(aLabels || "бытовой эффект")}</div>
+            </div>
+          </div>
+        </td>
+        <td class="right"><span class="mono">${og.qty}</span></td>
+        <td class="right">
+          <div class="logActions">
+            <button class="btn secondary tinyBtn" data-act="m">-</button>
+            <button class="btn secondary tinyBtn" data-act="p">+</button>
+            <button class="btn tinyBtn" data-act="craft">Крафт</button>
+          </div>
+        </td>
+      `;
+      tr.querySelector('[data-act="m"]').onclick = ()=>{
+        invAdd(state.inventory.gems, g.id, -1);
+        saveState(); render();
+      };
+      tr.querySelector('[data-act="p"]').onclick = ()=>{
+        invAdd(state.inventory.gems, g.id, +1);
+        saveState(); render();
+      };
+      tr.querySelector('[data-act="craft"]').onclick = ()=>{
+        state.craftDraft.mode = "gem";
+        state.craftDraft.gemId = g.id;
+        state.craftDraft.lockedAspectId = "";
+        state.craftDraft.aspectIds = [];
+        saveState();
+        showTab("craft");
+      };
+
+      gbody.appendChild(tr);
+    }
+  }
+
+  // Materials table
+  const mbody = root.querySelector("#inv_mat_tbody");
+  mbody.innerHTML = "";
+  for(const m of materials){
+    const qty = invGet(state.inventory.materials, m.id);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <div style="font-weight:700">${escapeHtml(m.name)} <span class="tag">${escapeHtml(m.group)}</span></div>
+        <div class="sub">Мастерство: ${escapeHtml(m.mastery)} • Работа: Сл ${m.workDC}, ${fmtTime(m.workTimeMin)} • Цена: ${m.unitCost.value} ${escapeHtml(m.unitCost.unit)} / ед.</div>
+      </td>
+      <td class="right">
+        <input type="number" min="0" step="1" value="${qty}" style="max-width:120px; text-align:right"
+          data-mid="${m.id}">
+      </td>
+    `;
+    tr.querySelector("input").onchange = (e)=>{
+      const v = Math.max(0, Math.floor(Number(e.target.value || 0)));
+      state.inventory.materials[m.id] = v;
+      saveState();
+      updateTopPill();
+    };
+    mbody.appendChild(tr);
+  }
+}
+
+/* =========================================================
+   12) СЕКЦИЯ: КРАФТ (конструктор)
+   - режим "gem": выбираем самоцвет -> аспекты
+   - режим "aspect": аспект задан, выбираем подходящий самоцвет (и аспекты фиксируются)
+   - учитываем материалы оправы + тип изделия (слитки)
+   - считаем стоимость камней (в зм) + стоимость оправы (только если цена материала в зм)
+   ========================================================= */
+
+function renderCraft(){
+  const root = document.getElementById("sec_craft");
+  const { list:gems, byId:gemsById, aspectToGems } = getAllGems();
+  const { list:aspects, byId:aspectsById } = getAllAspects();
+  const { list:materials, byId:materialsById } = getMaterials();
+  const { list:itemTypes, byId:itemTypesById } = getItemTypes();
+
+  // Ensure craft draft sane
+  if(!itemTypesById.has(state.craftDraft.itemTypeId)) state.craftDraft.itemTypeId = "ring";
+  if(!materialsById.has(state.craftDraft.materialId)) state.craftDraft.materialId = "gold";
+  if(state.craftDraft.mode !== "gem" && state.craftDraft.mode !== "aspect") state.craftDraft.mode = "gem";
+
+  const lockedAspectId = state.craftDraft.lockedAspectId || "";
+  const lockedAspect = lockedAspectId ? aspectsById.get(lockedAspectId) : null;
+
+  // Materials select with optgroups
+  const matHtml = (groupName)=> materials
+    .filter(m=>m.group===groupName)
+    .map(m=>`<option value="${m.id}" ${state.craftDraft.materialId===m.id?"selected":""}>${escapeHtml(m.name)}</option>`)
+    .join("");
+
+  // Item type select
+  const itemHtml = itemTypes
+    .map(t=>`<option value="${t.id}" ${state.craftDraft.itemTypeId===t.id?"selected":""}>${escapeHtml(t.name)} — ${t.units} ед.</option>`)
+    .join("");
+
+  // Mode UI
+  const modeGemChecked = state.craftDraft.mode==="gem" ? "checked":"";
+  const modeAspectChecked = state.craftDraft.mode==="aspect" ? "checked":"";
+
+  // Gem options:
+  // If lockedAspect exists or mode=aspect: show only provider gems (prefer those that are craftable)
+  let gemOptions = gems.slice();
+  if(state.craftDraft.mode === "aspect" && lockedAspect){
+    const providers = (aspectToGems.get(lockedAspectId)||[]).map(p=>p.gemId);
+    gemOptions = gemOptions.filter(g=>providers.includes(g.id));
+    // sort by (enough in inv) then by cost
+    gemOptions.sort((a,b)=>{
+      const aOk = invGet(state.inventory.gems,a.id) >= a.stonesPerAspect ? 1:0;
+      const bOk = invGet(state.inventory.gems,b.id) >= b.stonesPerAspect ? 1:0;
+      return (bOk-aOk) || (a.cost-b.cost) || a.name.localeCompare(b.name,"ru");
+    });
+  }else{
+    gemOptions.sort((a,b)=> (a.tier-b.tier) || a.name.localeCompare(b.name,"ru"));
+  }
+
+  const gemHtml = `<option value="">Выбери самоцвет</option>` + gemOptions.map(g=>{
+    const owned = invGet(state.inventory.gems, g.id);
+    return `<option value="${g.id}" ${state.craftDraft.gemId===g.id?"selected":""}>${escapeHtml(g.name)} • тир ${g.tier} • есть ${owned}</option>`;
+  }).join("");
+
+  root.innerHTML = `
+    <div class="hrow">
+      <div class="col" style="flex:1">
+        <h2>Крафт</h2>
+        <div class="sub">Конструктор изделия: выбираешь тип, материал оправы, самоцвет и аспект(ы). Затем считаем стоимость и списываем ресурсы.</div>
       </div>
     </div>
-  </section>
 
-  <!-- Журнал -->
-  <section id="tab-journal" class="hidden">
-    <div class="toolbar">
-      <button class="danger" onclick="clearJournal()">Очистить журнал</button>
-      <div class="spacer"></div>
+    <div class="panel">
+      <div class="hrow">
+        <div class="field small">
+          <label>Режим</label>
+          <div class="row wrap">
+            <label class="checkbox" style="flex:1">
+              <input type="radio" name="cmode" value="gem" ${modeGemChecked}>
+              По самоцвету
+            </label>
+            <label class="checkbox" style="flex:1">
+              <input type="radio" name="cmode" value="aspect" ${modeAspectChecked} ${lockedAspect ? "" : ""}>
+              По аспекту
+            </label>
+          </div>
+          <div class="sub">Если крафт начат из карточки аспекта — режим “по аспекту” фиксирует этот аспект.</div>
+        </div>
+
+        <div class="field">
+          <label>Тип изделия</label>
+          <select id="c_item">${itemHtml}</select>
+        </div>
+
+        <div class="field">
+          <label>Материал оправы</label>
+          <select id="c_mat">
+            <optgroup label="Металлы">${matHtml("Металлы")}</optgroup>
+            <optgroup label="Иные материалы">${matHtml("Иные материалы")}</optgroup>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Самоцвет</label>
+        <select id="c_gem">${gemHtml}</select>
+        <div class="sub" id="c_gem_hint"></div>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="split">
+        <div class="panel">
+          <h3>Аспекты в изделии</h3>
+          <div class="sub" id="c_aspect_help"></div>
+          <div style="height:10px"></div>
+          <div id="c_aspect_area"></div>
+          <div class="note" style="margin-top:10px" id="c_inlay_note"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Итог</h3>
+          <div id="c_summary"></div>
+          <div class="btnRow" style="margin-top:12px">
+            <button class="btn good" id="c_confirm">Создать и записать</button>
+            <button class="btn secondary" id="c_reset">Сбросить</button>
+          </div>
+          <div class="note" style="margin-top:10px">
+            Стоимость оправы в <span class="mono">зм</span> считается только для материалов, у которых цена указана в зм.
+            Для материалов с ценой в <span class="mono">мм/см</span> — цена показывается, но в сумму <span class="mono">зм</span> не входит.
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="grid" id="journalGrid"></div>
-  </section>
+  `;
 
-  <!-- IO -->
-  <section id="tab-io" class="hidden">
-    <div class="card">
-      <h3>Экспорт / Импорт</h3>
-      <div class="small">Экспорт — копирует состояние в буфер. Импорт — заменяет текущее состояние.</div>
-      <div class="toolbar">
-        <button onclick="exportState()">Скопировать JSON</button>
-        <button class="danger" onclick="resetState()">Сбросить состояние</button>
+  // --- BIND CONTROLS ---
+  // mode radios
+  root.querySelectorAll('input[name="cmode"]').forEach(r=>{
+    r.onchange = ()=>{
+      const v = r.value;
+      // если есть lockedAspect — "aspect" разрешён и логичен, иначе тоже разрешаем (пользователь сам выберет аспект через UI)
+      state.craftDraft.mode = v;
+      // при переключении режима, если уходим в gem — unlock aspect
+      if(v === "gem"){
+        state.craftDraft.lockedAspectId = "";
+        state.craftDraft.aspectIds = [];
+      }else{
+        // если нет lockedAspectId — оставим пустым, аспект выберется через аспекты (ниже)
+        // но если уже выбран аспект(ы) — оставим
+        if(state.craftDraft.aspectIds.length === 1){
+          state.craftDraft.lockedAspectId = state.craftDraft.aspectIds[0] || "";
+        }
+      }
+      saveState();
+      renderCraft(); // перерисуем только крафт секцию
+    };
+  });
+
+  // item type
+  root.querySelector("#c_item").onchange = (e)=>{
+    state.craftDraft.itemTypeId = e.target.value;
+    saveState();
+    renderCraft();
+  };
+
+  // material
+  root.querySelector("#c_mat").onchange = (e)=>{
+    state.craftDraft.materialId = e.target.value;
+    saveState();
+    renderCraft();
+  };
+
+  // gem select
+  root.querySelector("#c_gem").onchange = (e)=>{
+    state.craftDraft.gemId = e.target.value;
+    // если режим gem — сбрасываем выбранные аспекты, пересоберём по камню
+    if(state.craftDraft.mode === "gem"){
+      state.craftDraft.aspectIds = [];
+      state.craftDraft.lockedAspectId = "";
+    }
+    saveState();
+    renderCraft();
+  };
+
+  // reset
+  root.querySelector("#c_reset").onclick = ()=>{
+    state.craftDraft = structuredClone(DEFAULT_STATE.craftDraft);
+    saveState();
+    renderCraft();
+  };
+
+  // --- BUILD ASPECT PICKER + SUMMARY ---
+  const gemId = state.craftDraft.gemId || "";
+  const gem = gemId ? gemsById.get(gemId) : null;
+
+  // hint about selected gem
+  const gemHint = root.querySelector("#c_gem_hint");
+  if(!gem){
+    gemHint.innerHTML = `<span class="muted">Выбери самоцвет, чтобы увидеть доступные аспекты и расчёты.</span>`;
+  }else{
+    const tierRule = TIER_RULES[gem.tier];
+    const owned = invGet(state.inventory.gems, gem.id);
+    gemHint.innerHTML = `
+      <span class="badge ${owned>=gem.stonesPerAspect?"ok":""}">
+        <span class="dot"></span>Есть: ${owned}
+      </span>
+      <span class="badge"><span class="dot"></span>Тир ${gem.tier} (${gem.cost} зм)</span>
+      <span class="badge"><span class="dot"></span>Камней на аспект: ${gem.stonesPerAspect}</span>
+      <span class="badge"><span class="dot"></span>Макс. аспектов: ${gem.maxAspects}</span>
+      <span class="badge"><span class="dot"></span>Инкрустация: Сл ${tierRule.inlayDC}, ${fmtTime(tierRule.inlayTimeMin)}</span>
+    `;
+  }
+
+  const aspectArea = root.querySelector("#c_aspect_area");
+  const aspectHelp = root.querySelector("#c_aspect_help");
+  const inlayNote = root.querySelector("#c_inlay_note");
+
+  // if mode aspect but no lockedAspectId — allow picking any aspect first, then filter gems by it.
+  // However user asked to simplify to one gem dropdown; we keep it one dropdown. So if mode aspect and no lockedAspect,
+  // we show aspect selector (single), then filter gem dropdown is NOT interactive here because already rendered.
+  // We'll implement: if mode aspect and no lockedAspect and no chosen aspectIds -> show selector for aspect, and gem dropdown shows all gems.
+  // When aspect picked -> set lockedAspectId and rerender, which will filter gem options (providers).
+  const mode = state.craftDraft.mode;
+
+  function providersForAspect(aid){
+    return (aspectToGems.get(aid) || []).map(p=>p.gemId);
+  }
+
+  // Determine "active aspect ids" based on mode + gem
+  let allowedAspectIds = [];
+  if(gem){
+    allowedAspectIds = gem.aspects.slice(); // aspects tied to gem (includes fx_... for flavor)
+  }
+
+  // If mode aspect and lockedAspect exists -> force aspectIds = [lockedAspect]
+  if(mode === "aspect" && lockedAspectId){
+    state.craftDraft.aspectIds = [lockedAspectId];
+  }
+
+  // Ensure selected aspects are valid for gem (in gem mode) or for locked (aspect mode)
+  if(mode === "gem"){
+    // keep only allowed
+    state.craftDraft.aspectIds = (state.craftDraft.aspectIds||[]).filter(aid=>allowedAspectIds.includes(aid));
+    // If empty, default to first allowed (if exists)
+    if(gem && allowedAspectIds.length && state.craftDraft.aspectIds.length === 0){
+      state.craftDraft.aspectIds = [allowedAspectIds[0]];
+    }
+    // If gem has maxAspects=2 allow selecting 1 or 2 from allowed; we keep UI as multi-checkbox.
+  }else{
+    // aspect mode
+    if(!lockedAspectId){
+      // if no locked, allow user to pick one aspect from all rule/flavor/custom (excluding fx_ that are created from gems?)
+      // We'll allow all aspects except the auto-generated fx_ (kind=flavor) that do not have providers aside from their gem,
+      // but it's fine. We'll allow.
+    }else{
+      // locked set above
+    }
+  }
+
+  // Build aspect UI
+  if(mode === "aspect" && !lockedAspectId){
+    // Step 1: pick aspect
+    const options = aspects
+      .slice()
+      .sort((a,b)=> (a.group.localeCompare(b.group,"ru")) || ((a.sub||"").localeCompare(b.sub||"","ru")) || a.name.localeCompare(b.name,"ru"))
+      .map(a=>`<option value="${a.id}">${escapeHtml(a.group)}${a.sub?` • ${escapeHtml(a.sub)}`:""} — ${escapeHtml(a.name)}</option>`)
+      .join("");
+
+    aspectHelp.innerHTML = `Выбери аспект. После этого список самоцветов будет отфильтрован только до подходящих.`;
+    aspectArea.innerHTML = `
+      <div class="field">
+        <label>Аспект</label>
+        <select id="c_pick_aspect">
+          <option value="">Выбери аспект</option>
+          ${options}
+        </select>
       </div>
-      <label>Импорт JSON</label>
-      <textarea id="importBox" rows="10" placeholder="Вставь сюда JSON…"></textarea>
-      <div class="toolbar">
-        <button class="primary" onclick="importState()">Импорт</button>
+      <div class="note" style="margin-top:10px">
+        Совет: удобнее начинать крафт “по аспекту” из каталога аспектов — тогда аспект фиксируется автоматически.
       </div>
+    `;
+
+    const sel = aspectArea.querySelector("#c_pick_aspect");
+    sel.onchange = ()=>{
+      const aid = sel.value;
+      if(!aid) return;
+      state.craftDraft.lockedAspectId = aid;
+      state.craftDraft.aspectIds = [aid];
+      state.craftDraft.gemId = ""; // пользователь выберет камень из отфильтрованного списка
+      saveState();
+      renderCraft();
+    };
+
+    inlayNote.innerHTML = `<span class="muted">Инкрустация зависит от тира выбранного самоцвета.</span>`;
+  }else{
+    // Mode gem OR aspect locked: show aspects allowed by gem (gem mode) OR fixed aspect (aspect mode)
+    if(!gem){
+      aspectHelp.innerHTML = `<span class="muted">Сначала выбери самоцвет.</span>`;
+      aspectArea.innerHTML = `<div class="muted">—</div>`;
+      inlayNote.innerHTML = `<span class="muted">—</span>`;
+    }else{
+      const tierRule = TIER_RULES[gem.tier];
+      inlayNote.innerHTML = `
+        Инкрустация для тира <span class="mono">${gem.tier}</span>:
+        Сл <span class="mono">${tierRule.inlayDC}</span>,
+        время <span class="mono">${fmtTime(tierRule.inlayTimeMin)}</span>.
+      `;
+
+      if(mode === "aspect" && lockedAspectId){
+        const a = aspectsById.get(lockedAspectId);
+        aspectHelp.innerHTML = `Аспект зафиксирован: <strong>${escapeHtml(a ? a.name : "—")}</strong>.`;
+        aspectArea.innerHTML = `
+          <div class="note">
+            <div class="k">Аспект</div>
+            <div style="margin-top:6px">
+              <span class="badge ok"><span class="dot"></span>${escapeHtml(a ? a.name : lockedAspectId)}<span class="tag">${escapeHtml(a ? a.group : "")}</span></span>
+            </div>
+            <div style="margin-top:8px" class="sub">${escapeHtml(a ? a.effect : "")}</div>
+          </div>
+        `;
+      }else{
+        // mode gem: choose 1..max aspects from this gem's aspects
+        const allowed = gem.aspects.slice();
+        const max = gem.maxAspects || 1;
+
+        // If the gem is "flavor" (fx_...) — it's just one aspect, so no picker needed
+        if(allowed.length === 1 && allowed[0].startsWith("fx_")){
+          const a = aspectsById.get(allowed[0]);
+          aspectHelp.innerHTML = `Это бытовой камень: аспект-эффект выбирается автоматически.`;
+          aspectArea.innerHTML = `
+            <div class="note">
+              <div class="k">Эффект</div>
+              <div style="margin-top:6px" class="v">${escapeHtml(a ? a.effect : "")}</div>
+            </div>
+          `;
+          state.craftDraft.aspectIds = [allowed[0]];
+          saveState();
+        }else{
+          // picker
+          aspectHelp.innerHTML = `Выбери до <span class="mono">${max}</span> аспект(ов), связанных с самоцветом.`;
+
+          // ensure at least one selected
+          let selected = (state.craftDraft.aspectIds||[]).filter(x=>allowed.includes(x));
+          if(selected.length === 0 && allowed.length) selected = [allowed[0]];
+          if(selected.length > max) selected = selected.slice(0,max);
+          state.craftDraft.aspectIds = selected;
+          saveState();
+
+          const checks = allowed.map(aid=>{
+            const a = aspectsById.get(aid);
+            const isChecked = selected.includes(aid);
+            const label = a ? `${a.name} (${a.group}${a.sub?` • ${a.sub}`:""})` : aid;
+            const desc = a ? a.effect : "";
+            return `
+              <label class="checkbox" style="align-items:flex-start">
+                <input type="checkbox" value="${aid}" ${isChecked?"checked":""}>
+                <span>
+                  <div style="font-weight:700">${escapeHtml(label)}</div>
+                  <div class="sub">${escapeHtml(desc)}</div>
+                </span>
+              </label>
+            `;
+          }).join("");
+
+          aspectArea.innerHTML = `
+            <div class="col" style="gap:10px">
+              ${checks}
+            </div>
+          `;
+
+          aspectArea.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+            cb.onchange = ()=>{
+              const picked = [...aspectArea.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value);
+              // clamp to max: if over, undo last toggle
+              if(picked.length > max){
+                cb.checked = false;
+                toast(`Можно выбрать максимум ${max} аспект(а/ов).`);
+                return;
+              }
+              state.craftDraft.aspectIds = picked.length ? picked : [allowed[0]];
+              saveState();
+              renderCraft(); // rerender to update summary
+            };
+          });
+        }
+      }
+    }
+  }
+
+  // --- SUMMARY + CONFIRM ---
+  const summaryEl = root.querySelector("#c_summary");
+  const btnConfirm = root.querySelector("#c_confirm");
+
+  const itemType = itemTypesById.get(state.craftDraft.itemTypeId);
+  const mat = materialsById.get(state.craftDraft.materialId);
+
+  // Determine required resources
+  const unitsNeeded = itemType ? itemType.units : 1;
+  const matOwned = invGet(state.inventory.materials, mat.id);
+
+  // Gem stones needed
+  let stonesNeeded = 0;
+  let stoneCostGold = 0;
+  let inlayDC = null;
+  let inlayTimeMin = null;
+  let aspectsChosen = [];
+  let craftErrors = [];
+
+  if(!gem){
+    craftErrors.push("Не выбран самоцвет.");
+  }else{
+    aspectsChosen = (state.craftDraft.aspectIds||[]).slice();
+    if(aspectsChosen.length === 0) craftErrors.push("Не выбран аспект.");
+    // stones required = stonesPerAspect * numberOfAspectsChosen (for gems with maxAspects=2 and user selected 2)
+    const countAspects = Math.max(1, aspectsChosen.length || 1);
+    stonesNeeded = gem.stonesPerAspect * countAspects;
+    stoneCostGold = gem.cost * stonesNeeded;
+
+    const tierRule = TIER_RULES[gem.tier];
+    inlayDC = tierRule.inlayDC;
+    inlayTimeMin = tierRule.inlayTimeMin;
+
+    const owned = invGet(state.inventory.gems, gem.id);
+    if(owned < stonesNeeded){
+      craftErrors.push(`Недостаточно самоцветов: нужно ${stonesNeeded}, есть ${owned}.`);
+    }
+  }
+
+  // Material required
+  const matCostGold = moneyToGold(mat.unitCost) * unitsNeeded;
+  const matCostLabel = `${mat.unitCost.value} ${mat.unitCost.unit} × ${unitsNeeded} ед.`;
+
+  if(matOwned < unitsNeeded){
+    craftErrors.push(`Недостаточно материала оправы: нужно ${unitsNeeded} ед., есть ${matOwned}.`);
+  }
+
+  // Total cost in gold (zм)
+  const totalGold = stoneCostGold + matCostGold;
+
+  // Build aspect label list
+  const aspectLabels = aspectsChosen.map(aid=>{
+    const a = aspectsById.get(aid);
+    if(!a) return aid;
+    return `${a.name} (${a.group}${a.sub?` • ${a.sub}`:""})`;
+  });
+
+  // Work DC/time: could be material work + inlay work
+  // We'll display both (since they are separate in your rules)
+  const matWork = `Оправa: Сл ${mat.workDC}, ${fmtTime(mat.workTimeMin)}`;
+  const inlayWork = (inlayDC !== null) ? `Инкрустация: Сл ${inlayDC}, ${fmtTime(inlayTimeMin)}` : "Инкрустация: —";
+
+  // Inventory implications
+  const canCraft = craftErrors.length === 0;
+
+  summaryEl.innerHTML = `
+    <div class="note">
+      <div class="k">Выбранное изделие</div>
+      <div style="margin-top:6px">
+        <div class="v"><strong>${escapeHtml(itemType ? itemType.name : "—")}</strong></div>
+        <div class="sub">${escapeHtml(mat.name)} • расход: <span class="mono">${unitsNeeded}</span> ед. • ${escapeHtml(matWork)}</div>
+        <div class="sub">${gem ? `${escapeHtml(gem.name)} • расход: <span class="mono">${stonesNeeded}</span> шт. • ${escapeHtml(inlayWork)}` : ""}</div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="k">Аспекты</div>
+      <div style="margin-top:6px" class="sub">
+        ${aspectLabels.length ? aspectLabels.map(x=>`• ${escapeHtml(x)}`).join("<br>") : "—"}
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="k">Стоимость</div>
+      <div style="margin-top:6px">
+        <div class="sub">Самоцветы: <span class="mono">${gem ? `${gem.cost} зм × ${stonesNeeded} = ${stoneCostGold} зм` : "—"}</span></div>
+        <div class="sub">Оправa: <span class="mono">${escapeHtml(matCostLabel)}${mat.unitCost.unit==="зм" ? ` = ${matCostGold} зм` : ` (в зм не суммируется)`}</span></div>
+        <div class="v" style="margin-top:8px; font-weight:780">Итого: <span class="mono">${totalGold}</span> зм</div>
+      </div>
+
+      ${craftErrors.length ? `
+        <div class="sep"></div>
+        <div class="badge bad"><span class="dot"></span>Нельзя создать</div>
+        <div style="margin-top:8px" class="sub">${craftErrors.map(e=>`• ${escapeHtml(e)}`).join("<br>")}</div>
+      ` : `
+        <div class="sep"></div>
+        <div class="badge ok"><span class="dot"></span>Можно создать</div>
+      `}
     </div>
-  </section>
-</main>
+  `;
 
-<!-- Craft Modal -->
-<div id="craftModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="box">
-    <div class="head">
-      <h2>Конструктор крафта</h2>
-      <div class="row" style="gap:8px;align-items:center">
-        <span class="pill" id="craftLiveStatus">проверка…</span>
-        <button onclick="closeCraft()">Закрыть</button>
-      </div>
-    </div>
+  btnConfirm.disabled = !canCraft;
 
-    <div class="row">
-      <div>
-        <label>Название</label>
-        <input id="craftName" placeholder="Например: Кольцо ясности" />
-      </div>
-      <div>
-        <label>Тип изделия</label>
-        <select id="craftType"></select>
-      </div>
-    </div>
+  btnConfirm.onclick = ()=>{
+    if(!canCraft) return;
 
-    <div class="row">
-      <div>
-        <label>Основной материал оправы (даёт множитель цены)</label>
-        <select id="craftPrimaryMaterial"></select>
+    // Deduct resources
+    invAdd(state.inventory.materials, mat.id, -unitsNeeded);
+    invAdd(state.inventory.gems, gem.id, -stonesNeeded);
+
+    // Journal entry
+    const now = new Date();
+    const id = "j_" + now.getTime().toString(16) + "_" + Math.random().toString(16).slice(2,6);
+    const entry = {
+      id,
+      createdAt: now.toISOString(),
+      itemTypeId: state.craftDraft.itemTypeId,
+      materialId: state.craftDraft.materialId,
+      gemId: gem.id,
+      aspectIds: aspectsChosen.slice(),
+      stonesSpent: stonesNeeded,
+      materialUnitsSpent: unitsNeeded,
+      costGold: totalGold,
+      notes: "",
+    };
+    state.journal.unshift(entry);
+
+    toast("Изделие создано и записано в журнал.");
+    saveState();
+    updateTopPill();
+    showTab("journal");
+  };
+}
+
+/* =========================================================
+   13) СЕКЦИЯ: ЖУРНАЛ ИЗДЕЛИЙ
+   ========================================================= */
+
+function renderJournal(){
+  const root = document.getElementById("sec_journal");
+  const { byId:gemsById } = getAllGems();
+  const { byId:aspectsById } = getAllAspects();
+  const { byId:materialsById } = getMaterials();
+  const { byId:itemTypesById } = getItemTypes();
+
+  const entries = (state.journal||[]).slice();
+
+  root.innerHTML = `
+    <div class="hrow">
+      <div class="col" style="flex:1">
+        <h2>Журнал изделий</h2>
+        <div class="sub">История созданных украшений. Можно удалять записи и добавлять заметки.</div>
       </div>
-      <div>
-        <label>Режим наполнения</label>
-        <select id="craftMode">
-          <option value="gems">Самоцветы</option>
-          <option value="aspects">Аспекты</option>
+      <div class="field" style="max-width:360px; flex:0 0 360px">
+        <label>Поиск</label>
+        <input id="j_q" placeholder="Тип, материал, самоцвет, аспект..." value="${escapeHtml(ui.journal.q)}">
+      </div>
+      <div class="field tiny" style="max-width:180px; flex:0 0 180px">
+        <label>Сортировка</label>
+        <select id="j_sort">
+          <option value="new" ${ui.journal.sort==="new"?"selected":""}>Сначала новые</option>
+          <option value="old" ${ui.journal.sort==="old"?"selected":""}>Сначала старые</option>
+          <option value="cost" ${ui.journal.sort==="cost"?"selected":""}>По стоимости</option>
         </select>
       </div>
     </div>
 
-    <hr>
+    <div class="panel" id="j_list"></div>
+  `;
 
-    <h3 style="margin:0 0 6px 0;font-size:14px">Смета материалов</h3>
-    <div class="small">Материалы списываются из инвентаря при крафте.</div>
-    <div class="toolbar">
-      <button onclick="addMatRow()">Добавить материал</button>
-      <div class="spacer"></div>
-    </div>
-    <div id="matRows" class="table"></div>
+  root.querySelector("#j_q").oninput = (e)=>{ ui.journal.q = e.target.value; draw(); };
+  root.querySelector("#j_sort").onchange = (e)=>{ ui.journal.sort = e.target.value; draw(); };
 
-    <hr>
+  function draw(){
+    const listEl = root.querySelector("#j_list");
+    const q = ui.journal.q.trim().toLowerCase();
+    let arr = entries.slice();
 
-    <div id="modeGems">
-      <h3 style="margin:0 0 6px 0;font-size:14px">Самоцветы</h3>
-      <div class="small">Выбери камни и количество. Время = сумма времени по каждому камню.</div>
-      <div class="toolbar">
-        <button onclick="addGemRow()">Добавить самоцвет</button>
-        <div class="spacer"></div>
-      </div>
-      <div id="gemRows" class="table"></div>
-    </div>
+    if(ui.journal.sort === "old") arr.reverse();
+    if(ui.journal.sort === "cost") arr.sort((a,b)=> (b.costGold-a.costGold));
 
-    <div id="modeAspects" class="hidden">
-      <h3 style="margin:0 0 6px 0;font-size:14px">Аспекты</h3>
-      <div class="small">
-        Для каждого аспекта выбери камень-носитель и сколько камней вкладываешь.
-        Система проверит <b>stonesPerAspect</b> и наличие в инвентаре.
-      </div>
-      <div class="toolbar">
-        <button onclick="addAspectRow()">Добавить аспект</button>
-        <div class="spacer"></div>
-      </div>
-      <div id="aspectRows" class="table"></div>
-    </div>
+    // filter
+    arr = arr.filter(e=>{
+      const it = itemTypesById.get(e.itemTypeId);
+      const m = materialsById.get(e.materialId);
+      const g = gemsById.get(e.gemId);
+      const aNames = (e.aspectIds||[]).map(id=>{
+        const a = aspectsById.get(id);
+        return a ? `${a.name} ${a.group} ${a.sub||""} ${a.effect}` : id;
+      }).join(" ");
 
-    <hr>
-
-    <div class="card" style="box-shadow:none">
-      <h3 style="margin:0 0 6px 0;font-size:14px">Итоги</h3>
-      <div class="small" id="craftSummary">—</div>
-    </div>
-
-    <div class="toolbar">
-      <button id="craftConfirmBtn" class="primary" onclick="confirmCraft()">Скрафтить</button>
-      <div class="spacer"></div>
-      <button class="danger" onclick="closeCraft()">Отмена</button>
-    </div>
-  </div>
-</div>
-
-<!-- Simple editor modals (минимум) -->
-<div id="simpleModal" class="modal hidden">
-  <div class="box">
-    <div class="head">
-      <h2 id="simpleTitle">Редактор</h2>
-      <button onclick="closeSimple()">Закрыть</button>
-    </div>
-    <div id="simpleBody"></div>
-    <div class="toolbar">
-      <button class="primary" id="simpleSaveBtn">Сохранить</button>
-      <div class="spacer"></div>
-      <button class="danger hidden" id="simpleDeleteBtn">Удалить</button>
-    </div>
-  </div>
-</div>
-
-<script>
-const BUILTIN_URL = "data/jewelry_builtin.json";
-const SAVE_KEY = "jewelry_state_jewel_v1";
-
-let builtin = null;
-let state = null;
-
-function $(id){ return document.getElementById(id); }
-function esc(s){ return String(s??"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m])); }
-
-function nowIso(){ return new Date().toISOString(); }
-function uid(prefix="id"){ return prefix+"_"+Math.random().toString(16).slice(2)+Date.now().toString(16); }
-
-/* ---------- load + state ---------- */
-async function init(){
-  try{
-    setStatus("Загрузка базовых данных…");
-    const res = await fetch(BUILTIN_URL, { cache:"no-store" });
-    if(!res.ok) throw new Error("Не удалось загрузить jewelry_builtin.json");
-    builtin = await res.json();
-  }catch(e){
-    console.error(e);
-    setStatus("Ошибка загрузки данных. Проверь data/jewelry_builtin.json и запуск через сервер.", true);
-    return;
-  }
-
-  state = loadState();
-  normalizeState();
-  wireUI();
-  renderAll();
-
-  $("craftOpenBtn").disabled = false;
-  $("craftHint").textContent = "данные загружены";
-  setStatus("Готово");
-}
-
-function setStatus(text, isBad=false){
-  const el = $("status");
-  el.textContent = text;
-  el.style.color = isBad ? "var(--danger)" : "var(--muted)";
-}
-
-function loadState(){
-  const raw = localStorage.getItem(SAVE_KEY);
-  if(raw){
-    try { return JSON.parse(raw); } catch {}
-  }
-  return {
-    saveVersion:"1.0",
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
-    custom:{ gems:[], aspects:[] },
-    inventory:{ gems:{}, materials:{} },
-    journal:[]
-  };
-}
-
-function saveState(){
-  state.updatedAt = nowIso();
-  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-}
-
-/* ---------- data access ---------- */
-function allGems(){ return [...(builtin?.catalog?.gems||[]), ...(state?.custom?.gems||[])]; }
-function allAspects(){ return [...(builtin?.catalog?.aspects||[]), ...(state?.custom?.aspects||[])]; }
-function allMaterials(){ return [...(builtin?.materials?.metals||[]), ...(builtin?.materials?.others||[])]; }
-function tiersByGp(){
-  const map = new Map();
-  (builtin?.tiers||[]).forEach(t=>map.set(t.tierGp, t));
-  return map;
-}
-
-function normalizeState(){
-  state.custom ??= {gems:[],aspects:[]};
-  state.inventory ??= {gems:{},materials:{}};
-  state.inventory.gems ??= {};
-  state.inventory.materials ??= {};
-  state.journal ??= [];
-
-  // ensure inventory keys exist for all builtins + customs
-  for(const g of allGems()) if(state.inventory.gems[g.id]==null) state.inventory.gems[g.id]=0;
-  for(const m of allMaterials()) if(state.inventory.materials[m.id]==null) state.inventory.materials[m.id]=0;
-
-  saveState();
-}
-
-/* ---------- tabs ---------- */
-function wireUI(){
-  document.querySelectorAll(".tab").forEach(tab=>{
-    tab.addEventListener("click", ()=>{
-      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-      tab.classList.add("active");
-      const name = tab.dataset.tab;
-      document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
-      $("tab-"+name).classList.remove("hidden");
+      const hay = `${it?it.name:""} ${m?m.name:""} ${g?g.name:""} ${aNames} ${e.notes||""}`.toLowerCase();
+      if(q && !hay.includes(q)) return false;
+      return true;
     });
-  });
 
-  $("gemsSearch").addEventListener("input", renderGems);
-  $("aspectsSearch").addEventListener("input", renderAspects);
+    if(!arr.length){
+      listEl.innerHTML = `<div class="sub">Пока нет записей (или ничего не найдено по фильтру).</div>`;
+      return;
+    }
 
-  // modal close interactions
-  $("craftModal").addEventListener("click", (e)=>{ if(e.target.id==="craftModal") closeCraft(); });
-  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ closeCraft(); closeSimple(); } });
+    listEl.innerHTML = arr.map(e=>{
+      const it = itemTypesById.get(e.itemTypeId);
+      const m = materialsById.get(e.materialId);
+      const g = gemsById.get(e.gemId);
+      const date = new Date(e.createdAt);
+      const dateStr = isFinite(date.getTime()) ? date.toLocaleString("ru-RU") : e.createdAt;
 
-  $("craftMode").addEventListener("change", ()=>{
-    const mode = $("craftMode").value;
-    $("modeGems").classList.toggle("hidden", mode!=="gems");
-    $("modeAspects").classList.toggle("hidden", mode!=="aspects");
-    recomputeCraft();
-  });
+      const aspects = (e.aspectIds||[]).map(id=>{
+        const a = aspectsById.get(id);
+        if(!a) return `<span class="badge"><span class="dot"></span>${escapeHtml(id)}</span>`;
+        return `<span class="badge"><span class="dot"></span>${escapeHtml(a.name)}<span class="tag">${escapeHtml(a.group)}</span></span>`;
+      }).join("");
+
+      return `
+        <div class="logItem" data-id="${e.id}">
+          <div style="flex:1; min-width:240px">
+            <div class="logTitle">${escapeHtml(it?it.name:"Изделие")} • ${escapeHtml(m?m.name:"Материал")}</div>
+            <div class="logMeta">
+              ${escapeHtml(dateStr)}<br>
+              Самоцвет: <strong>${escapeHtml(g?g.name:"—")}</strong> • камней: <span class="mono">${e.stonesSpent}</span><br>
+              Материал: <span class="mono">${e.materialUnitsSpent}</span> ед. • Итого: <span class="mono">${e.costGold}</span> зм
+            </div>
+            <div style="margin-top:8px">${aspects || `<span class="muted">—</span>`}</div>
+            <div style="margin-top:10px">
+              <label class="k">Заметка</label>
+              <input data-act="note" value="${escapeHtml(e.notes||"")}" placeholder="Например: кому подарено, где сделано...">
+            </div>
+          </div>
+          <div class="logActions">
+            <button class="btn secondary tinyBtn" data-act="toCraft">Повторить</button>
+            <button class="btn danger tinyBtn" data-act="del">Удалить</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    // bind actions
+    listEl.querySelectorAll(".logItem").forEach(row=>{
+      const id = row.getAttribute("data-id");
+      const entry = state.journal.find(x=>x.id===id);
+      if(!entry) return;
+
+      row.querySelector('[data-act="del"]').onclick = ()=>{
+        state.journal = state.journal.filter(x=>x.id!==id);
+        toast("Запись удалена.");
+        saveState();
+        renderJournal();
+      };
+
+      row.querySelector('[data-act="toCraft"]').onclick = ()=>{
+        state.craftDraft.mode = "gem";
+        state.craftDraft.itemTypeId = entry.itemTypeId;
+        state.craftDraft.materialId = entry.materialId;
+        state.craftDraft.gemId = entry.gemId;
+        state.craftDraft.aspectIds = (entry.aspectIds||[]).slice();
+        state.craftDraft.lockedAspectId = "";
+        saveState();
+        showTab("craft");
+      };
+
+      row.querySelector('[data-act="note"]').oninput = (e)=>{
+        entry.notes = e.target.value;
+        saveState();
+      };
+    });
+  }
+
+  draw();
 }
 
-/* ---------- render каталоги ---------- */
-function renderAll(){
-  renderGems();
-  renderAspects();
-  renderInventory();
-  renderJournal();
-}
+/* =========================================================
+   14) СЕКЦИЯ: ЭКСПОРТ / ИМПОРТ
+   ========================================================= */
 
-function renderGems(){
-  const q = ($("gemsSearch").value||"").trim().toLowerCase();
-  const grid = $("gemsGrid");
-  const list = allGems()
-    .filter(g=>!q || g.name.toLowerCase().includes(q) || String(g.tierGp).includes(q))
-    .sort((a,b)=> (a.tierGp-b.tierGp) || a.name.localeCompare(b.name,"ru"));
+function renderState(){
+  const root = document.getElementById("sec_state");
 
-  grid.innerHTML = list.map(g=>`
-    <div class="card">
-      <h3>${esc(g.name)}</h3>
-      <div class="small">Категория: <b>${esc(g.category||(`${g.tierGp} зм`))}</b></div>
-      <div class="small">Tier: ${g.tierGp} зм · Камней на аспект: ${g.stonesPerAspect} · Лимит аспектов: ${g.aspectSlotsInItem ?? "—"}</div>
-      <div class="small">${esc(g.rulesText||"")}</div>
-      <div class="toolbar">
-        ${isCustomGem(g.id) ? `<button onclick="openGemEditor('${esc(g.id)}')">Редактировать</button>` : `<span class="pill">встроенный</span>`}
-        <div class="spacer"></div>
+  root.innerHTML = `
+    <div class="hrow">
+      <div class="col" style="flex:1">
+        <h2>Экспорт / импорт состояния</h2>
+        <div class="sub">Сохраняй и переноси инвентарь, кастомные записи, журнал. Формат — JSON.</div>
+      </div>
+      <div class="btnRow">
+        <button class="btn secondary" id="st_reset">Сбросить всё</button>
       </div>
     </div>
-  `).join("");
-}
 
-function renderAspects(){
-  const q = ($("aspectsSearch").value||"").trim().toLowerCase();
-  const grid = $("aspectsGrid");
-  const list = allAspects()
-    .filter(a=>!q || a.name.toLowerCase().includes(q) || (a.category||"").toLowerCase().includes(q))
-    .sort((a,b)=> (a.category||"").localeCompare(b.category||"","ru") || a.name.localeCompare(b.name,"ru"));
+    <div class="split">
+      <div class="panel">
+        <h3>Экспорт</h3>
+        <div class="sub">Нажми “Сформировать JSON”, затем скопируй.</div>
+        <div class="btnRow">
+          <button class="btn good" id="st_make">Сформировать JSON</button>
+          <button class="btn secondary" id="st_copy">Копировать</button>
+          <button class="btn secondary" id="st_download">Скачать .json</button>
+        </div>
+        <div style="height:10px"></div>
+        <textarea id="st_text" spellcheck="false" placeholder="Здесь появится JSON..."></textarea>
+      </div>
 
-  grid.innerHTML = list.map(a=>`
-    <div class="card">
-      <h3>${esc(a.name)}</h3>
-      <div class="small">Категория: <b>${esc(a.category||"—")}</b></div>
-      <div class="small">${esc(a.rulesText||"")}</div>
-      <div class="toolbar">
-        ${isCustomAspect(a.id) ? `<button onclick="openAspectEditor('${esc(a.id)}')">Редактировать</button>` : `<span class="pill">встроенный</span>`}
-        <div class="spacer"></div>
+      <div class="panel">
+        <h3>Импорт</h3>
+        <div class="sub">Вставь JSON и нажми “Импортировать”.</div>
+        <div class="btnRow">
+          <button class="btn" id="st_import">Импортировать</button>
+          <button class="btn secondary" id="st_validate">Проверить JSON</button>
+        </div>
+        <div style="height:10px"></div>
+        <textarea id="st_in" spellcheck="false" placeholder='Вставь сюда JSON состояния...'></textarea>
+        <div class="note" style="margin-top:10px">
+          Импорт перезапишет текущее состояние.
+        </div>
       </div>
     </div>
-  `).join("");
-}
+  `;
 
-/* ---------- inventory ---------- */
-function renderInventory(){
-  // gems
-  const gWrap = $("invGems");
-  const gems = allGems().sort((a,b)=> (a.tierGp-b.tierGp) || a.name.localeCompare(b.name,"ru"));
-  gWrap.innerHTML = gems.map(g=>`
-    <div class="card" style="box-shadow:none">
-      <h3>${esc(g.name)}</h3>
-      <div class="small">${g.tierGp} зм</div>
-      <label>Количество</label>
-      <input type="number" min="0" value="${state.inventory.gems[g.id]||0}" data-inv-gem="${esc(g.id)}"/>
-    </div>
-  `).join("");
-  gWrap.querySelectorAll("[data-inv-gem]").forEach(inp=>{
-    inp.addEventListener("change", ()=>{
-      const id = inp.dataset.invGem;
-      state.inventory.gems[id] = Math.max(0, +inp.value||0);
+  const out = root.querySelector("#st_text");
+  const inp = root.querySelector("#st_in");
+
+  root.querySelector("#st_make").onclick = ()=>{
+    out.value = JSON.stringify(state, null, 2);
+    toast("JSON сформирован.");
+  };
+
+  root.querySelector("#st_copy").onclick = async ()=>{
+    try{
+      if(!out.value) out.value = JSON.stringify(state, null, 2);
+      await navigator.clipboard.writeText(out.value);
+      toast("Скопировано в буфер обмена.");
+    }catch{
+      toast("Не удалось скопировать. Скопируй вручную.");
+    }
+  };
+
+  root.querySelector("#st_download").onclick = ()=>{
+    const txt = out.value || JSON.stringify(state, null, 2);
+    const blob = new Blob([txt], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "jewelry_state.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  root.querySelector("#st_validate").onclick = ()=>{
+    try{
+      const obj = JSON.parse(inp.value);
+      if(!obj || typeof obj !== "object") throw new Error("not object");
+      toast("JSON выглядит валидным.");
+    }catch{
+      toast("Ошибка: JSON невалиден.");
+    }
+  };
+
+  root.querySelector("#st_import").onclick = ()=>{
+    try{
+      const obj = JSON.parse(inp.value);
+      if(!obj || typeof obj !== "object") throw new Error("bad");
+      state = mergeDefaults(obj, DEFAULT_STATE);
       saveState();
-      recomputeCraft();
-    });
-  });
-
-  // materials
-  const mWrap = $("invMaterials");
-  const mats = allMaterials().sort((a,b)=> a.name.localeCompare(b.name,"ru"));
-  mWrap.innerHTML = mats.map(m=>`
-    <div class="card" style="box-shadow:none">
-      <h3>${esc(m.name)}</h3>
-      <div class="small">Сложность: ${m.workDC} · Цена ед.: ${formatCoins(m.unitCost)} (${m.unitCostGp} зм)</div>
-      <label>Количество единиц</label>
-      <input type="number" min="0" value="${state.inventory.materials[m.id]||0}" data-inv-mat="${esc(m.id)}"/>
-    </div>
-  `).join("");
-  mWrap.querySelectorAll("[data-inv-mat]").forEach(inp=>{
-    inp.addEventListener("change", ()=>{
-      const id = inp.dataset.invMat;
-      state.inventory.materials[id] = Math.max(0, +inp.value||0);
-      saveState();
-      recomputeCraft();
-    });
-  });
-}
-
-/* ---------- journal ---------- */
-function renderJournal(){
-  const grid = $("journalGrid");
-  const list = [...state.journal].sort((a,b)=> (b.createdAt||"").localeCompare(a.createdAt||""));
-  if(list.length===0){
-    grid.innerHTML = `<div class="card"><h3>Пусто</h3><div class="small">Скрафти что-нибудь — появится запись.</div></div>`;
-    return;
-  }
-  grid.innerHTML = list.map(it=>`
-    <div class="card">
-      <h3>${esc(it.name)}</h3>
-      <div class="small">${esc(it.typeName)} · ${esc(it.primaryMaterialName)}</div>
-      <div class="small">
-        Цена: <b>${it.finalPriceGp.toFixed(2)} зм</b> ·
-        Время: <b>${formatTime(it.craftTimeMin)}</b> ·
-        Сл: <b>${it.workDC}</b>
-      </div>
-      <div class="small">
-        Материалы: ${esc(it.materialsBillText)}<br>
-        Камни: ${esc(it.gemsText)}<br>
-        Аспекты: ${esc(it.aspectsText)}
-      </div>
-      <div class="toolbar">
-        <button class="danger" onclick="deleteJournal('${esc(it.id)}')">Удалить</button>
-        <div class="spacer"></div>
-      </div>
-    </div>
-  `).join("");
-}
-
-function deleteJournal(id){
-  state.journal = state.journal.filter(x=>x.id!==id);
-  saveState();
-  renderJournal();
-}
-function clearJournal(){
-  if(!confirm("Очистить журнал изделий?")) return;
-  state.journal = [];
-  saveState();
-  renderJournal();
-}
-
-/* ---------- craft modal ---------- */
-let craftDraft = null;
-
-function openCraft(){
-  if(!builtin) return;
-
-  craftDraft = {
-    id: uid("craft"),
-    name: "",
-    typeId: builtin.jewelryTypes?.[0]?.id || "",
-    primaryMaterialId: allMaterials()[0]?.id || "",
-    materialsBill: [],   // {materialId, qty}
-    mode: "gems",
-    gems: [],            // {gemId, qty}
-    aspects: []          // {aspectId, carrierGemId, embeddedStonesQty}
+      toast("Импортировано.");
+      render();
+    }catch{
+      toast("Не удалось импортировать: проверь JSON.");
+    }
   };
 
-  // fill selects
-  $("craftType").innerHTML = (builtin.jewelryTypes||[]).map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("");
-  $("craftPrimaryMaterial").innerHTML = allMaterials().map(m=>`<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("");
-
-  $("craftName").value = "";
-  $("craftMode").value = "gems";
-
-  $("craftModal").classList.remove("hidden");
-  $("modeGems").classList.remove("hidden");
-  $("modeAspects").classList.add("hidden");
-
-  // wire
-  $("craftType").onchange = ()=>{ craftDraft.typeId = $("craftType").value; recomputeCraft(); };
-  $("craftPrimaryMaterial").onchange = ()=>{ craftDraft.primaryMaterialId = $("craftPrimaryMaterial").value; recomputeCraft(); };
-  $("craftName").oninput = ()=>{ craftDraft.name = $("craftName").value; };
-
-  // start with 1 row each for convenience
-  $("matRows").innerHTML = "";
-  $("gemRows").innerHTML = "";
-  $("aspectRows").innerHTML = "";
-  addMatRow();
-  addGemRow();
-
-  recomputeCraft();
-}
-
-function closeCraft(){
-  $("craftModal").classList.add("hidden");
-  craftDraft = null;
-}
-
-function addMatRow(){
-  if(!craftDraft) return;
-  craftDraft.materialsBill.push({ materialId: allMaterials()[0]?.id || "", qty: 1 });
-  renderMatRows();
-  recomputeCraft();
-}
-function removeMatRow(idx){
-  craftDraft.materialsBill.splice(idx,1);
-  renderMatRows();
-  recomputeCraft();
-}
-function renderMatRows(){
-  const wrap = $("matRows");
-  const mats = allMaterials();
-  wrap.innerHTML = craftDraft.materialsBill.map((r,idx)=>`
-    <div class="tableRow">
-      <select data-mat-id="${idx}">
-        ${mats.map(m=>`<option value="${esc(m.id)}" ${m.id===r.materialId?"selected":""}>${esc(m.name)}</option>`).join("")}
-      </select>
-      <input type="number" min="0" step="1" value="${r.qty}" data-mat-qty="${idx}"/>
-      <div class="small">${invMatText(r.materialId)}</div>
-      <button class="x danger" onclick="removeMatRow(${idx})">✕</button>
-    </div>
-  `).join("");
-  wrap.querySelectorAll("[data-mat-id]").forEach(sel=>{
-    sel.addEventListener("change", ()=>{
-      const idx = +sel.dataset.matId;
-      craftDraft.materialsBill[idx].materialId = sel.value;
-      recomputeCraft();
-      renderMatRows();
-    });
-  });
-  wrap.querySelectorAll("[data-mat-qty]").forEach(inp=>{
-    inp.addEventListener("input", ()=>{
-      const idx = +inp.dataset.matQty;
-      craftDraft.materialsBill[idx].qty = Math.max(0, Math.floor(+inp.value||0));
-      recomputeCraft();
-      renderMatRows();
-    });
-  });
-}
-
-function addGemRow(){
-  if(!craftDraft) return;
-  craftDraft.gems.push({ gemId: allGems()[0]?.id || "", qty: 1 });
-  renderGemRows();
-  recomputeCraft();
-}
-function removeGemRow(idx){
-  craftDraft.gems.splice(idx,1);
-  renderGemRows();
-  recomputeCraft();
-}
-function renderGemRows(){
-  const wrap = $("gemRows");
-  const gems = allGems().sort((a,b)=> (a.tierGp-b.tierGp) || a.name.localeCompare(b.name,"ru"));
-  wrap.innerHTML = craftDraft.gems.map((r,idx)=>`
-    <div class="tableRow">
-      <select data-gem-id="${idx}">
-        ${gems.map(g=>`<option value="${esc(g.id)}" ${g.id===r.gemId?"selected":""}>${esc(g.name)} (${g.tierGp}зм)</option>`).join("")}
-      </select>
-      <input type="number" min="0" step="1" value="${r.qty}" data-gem-qty="${idx}"/>
-      <div class="small">${invGemText(r.gemId)}</div>
-      <button class="x danger" onclick="removeGemRow(${idx})">✕</button>
-    </div>
-  `).join("");
-  wrap.querySelectorAll("[data-gem-id]").forEach(sel=>{
-    sel.addEventListener("change", ()=>{
-      const idx = +sel.dataset.gemId;
-      craftDraft.gems[idx].gemId = sel.value;
-      renderGemRows();
-      recomputeCraft();
-    });
-  });
-  wrap.querySelectorAll("[data-gem-qty]").forEach(inp=>{
-    inp.addEventListener("input", ()=>{
-      const idx = +inp.dataset.gemQty;
-      craftDraft.gems[idx].qty = Math.max(0, Math.floor(+inp.value||0));
-      recomputeCraft();
-      renderGemRows();
-    });
-  });
-}
-
-function addAspectRow(){
-  if(!craftDraft) return;
-  craftDraft.aspects.push({ aspectId: allAspects()[0]?.id || "", carrierGemId: allGems()[0]?.id || "", embeddedStonesQty: 1 });
-  renderAspectRows();
-  recomputeCraft();
-}
-function removeAspectRow(idx){
-  craftDraft.aspects.splice(idx,1);
-  renderAspectRows();
-  recomputeCraft();
-}
-function renderAspectRows(){
-  const wrap = $("aspectRows");
-  const aspects = allAspects().sort((a,b)=> (a.category||"").localeCompare(b.category||"","ru") || a.name.localeCompare(b.name,"ru"));
-  const gems = allGems().sort((a,b)=> (a.tierGp-b.tierGp) || a.name.localeCompare(b.name,"ru"));
-
-  wrap.innerHTML = craftDraft.aspects.map((r,idx)=>`
-    <div class="tableRow">
-      <select data-asp-id="${idx}">
-        ${aspects.map(a=>`<option value="${esc(a.id)}" ${a.id===r.aspectId?"selected":""}>${esc(a.name)}</option>`).join("")}
-      </select>
-      <select data-asp-gem="${idx}">
-        ${gems.map(g=>`<option value="${esc(g.id)}" ${g.id===r.carrierGemId?"selected":""}>${esc(g.name)} (${g.tierGp}зм)</option>`).join("")}
-      </select>
-      <input type="number" min="0" step="1" value="${r.embeddedStonesQty}" data-asp-qty="${idx}"/>
-      <button class="x danger" onclick="removeAspectRow(${idx})">✕</button>
-    </div>
-    <div class="small" style="margin:-2px 0 8px 0">
-      Камней в наличии: ${state.inventory.gems[r.carrierGemId]||0} · Требуется для активации: <b>${stonesPerAspectOf(r.carrierGemId)}</b>
-    </div>
-  `).join("");
-
-  wrap.querySelectorAll("[data-asp-id]").forEach(sel=>{
-    sel.addEventListener("change", ()=>{
-      const idx = +sel.dataset.aspId;
-      craftDraft.aspects[idx].aspectId = sel.value;
-      recomputeCraft();
-      renderAspectRows();
-    });
-  });
-  wrap.querySelectorAll("[data-asp-gem]").forEach(sel=>{
-    sel.addEventListener("change", ()=>{
-      const idx = +sel.dataset.aspGem;
-      craftDraft.aspects[idx].carrierGemId = sel.value;
-      recomputeCraft();
-      renderAspectRows();
-    });
-  });
-  wrap.querySelectorAll("[data-asp-qty]").forEach(inp=>{
-    inp.addEventListener("input", ()=>{
-      const idx = +inp.dataset.aspQty;
-      craftDraft.aspects[idx].embeddedStonesQty = Math.max(0, Math.floor(+inp.value||0));
-      recomputeCraft();
-      renderAspectRows();
-    });
-  });
-}
-
-function stonesPerAspectOf(gemId){
-  const g = allGems().find(x=>x.id===gemId);
-  return g?.stonesPerAspect ?? 0;
-}
-
-/* ---------- recompute craft ---------- */
-function recomputeCraft(){
-  if(!craftDraft) return;
-
-  // sync mode
-  craftDraft.mode = $("craftMode").value;
-
-  // Enforce constructor nature: if mode aspects, we don’t use gemRows (but we still consume stones via aspects)
-  // If mode gems, we ignore aspects list.
-  if(craftDraft.mode==="aspects"){
-    $("modeGems").classList.add("hidden");
-    $("modeAspects").classList.remove("hidden");
-    if($("aspectRows").children.length===0) addAspectRow();
-  }else{
-    $("modeGems").classList.remove("hidden");
-    $("modeAspects").classList.add("hidden");
-    if($("gemRows").children.length===0) addGemRow();
-  }
-
-  const tierMap = tiersByGp();
-  const primaryMat = allMaterials().find(m=>m.id===craftDraft.primaryMaterialId) || allMaterials()[0];
-
-  // cost & time
-  let stonesCostGp = 0;
-  let matsCostGp = 0;
-  let craftTimeMin = 0;
-  let workDC = primaryMat?.workDC ?? 0;
-  const multiplier = primaryMat?.saleMultiplier ?? 1;
-
-  // materials bill validation
-  const matNeed = new Map();
-  for(const row of craftDraft.materialsBill){
-    const qty = Math.max(0, row.qty|0);
-    if(!row.materialId) continue;
-    matNeed.set(row.materialId, (matNeed.get(row.materialId)||0) + qty);
-    const mat = allMaterials().find(m=>m.id===row.materialId);
-    if(mat) matsCostGp += qty * (mat.unitCostGp || 0);
-  }
-
-  // stones consumption depends on mode
-  const gemNeed = new Map();
-
-  if(craftDraft.mode==="gems"){
-    for(const row of craftDraft.gems){
-      const qty = Math.max(0, row.qty|0);
-      if(!row.gemId || qty===0) continue;
-      gemNeed.set(row.gemId, (gemNeed.get(row.gemId)||0) + qty);
-
-      const g = allGems().find(x=>x.id===row.gemId);
-      if(g){
-        stonesCostGp += qty * (g.tierGp || 0);
-        const tier = tierMap.get(g.tierGp);
-        craftTimeMin += qty * (tier?.timePerStoneMin || 0);
-      }
-    }
-  }else{
-    // aspects: stones consumed are carrier stones embedded
-    // plus requirement check embeddedStonesQty >= stonesPerAspect
-    for(const row of craftDraft.aspects){
-      const qty = Math.max(0, row.embeddedStonesQty|0);
-      if(!row.carrierGemId || qty===0) continue;
-      gemNeed.set(row.carrierGemId, (gemNeed.get(row.carrierGemId)||0) + qty);
-
-      const g = allGems().find(x=>x.id===row.carrierGemId);
-      if(g){
-        stonesCostGp += qty * (g.tierGp || 0);
-        const tier = tierMap.get(g.tierGp);
-        craftTimeMin += qty * (tier?.timePerStoneMin || 0);
-      }
-    }
-  }
-
-  // validations
-  let ok = true;
-  const problems = [];
-
-  // enough mats in inventory
-  for(const [matId, need] of matNeed.entries()){
-    const have = state.inventory.materials[matId]||0;
-    if(need>have){
-      ok=false;
-      problems.push(`Материал "${nameOfMat(matId)}": нужно ${need}, есть ${have}`);
-    }
-  }
-
-  // enough gems in inventory
-  for(const [gemId, need] of gemNeed.entries()){
-    const have = state.inventory.gems[gemId]||0;
-    if(need>have){
-      ok=false;
-      problems.push(`Самоцвет "${nameOfGem(gemId)}": нужно ${need}, есть ${have}`);
-    }
-  }
-
-  // aspect requirements
-  if(craftDraft.mode==="aspects"){
-    // requirement: each aspect row must have embeddedStonesQty >= stonesPerAspect(gem)
-    for(const row of craftDraft.aspects){
-      const req = stonesPerAspectOf(row.carrierGemId);
-      const qty = Math.max(0, row.embeddedStonesQty|0);
-      if(req>0 && qty<req){
-        ok=false;
-        problems.push(`Аспект "${nameOfAspect(row.aspectId)}": в изделии ${qty} камней "${nameOfGem(row.carrierGemId)}", нужно минимум ${req}`);
-      }
-    }
-  }
-
-  // final price
-  const base = stonesCostGp + matsCostGp;
-  const final = base * multiplier;
-
-  // UI
-  $("craftConfirmBtn").disabled = !ok;
-  $("craftLiveStatus").textContent = ok ? "можно крафтить" : "есть проблемы";
-  $("craftLiveStatus").style.borderColor = ok ? "var(--ok)" : "var(--danger)";
-
-  const gemsText = craftDraft.mode==="gems"
-    ? summarizeMap(gemNeed, nameOfGem)
-    : summarizeMap(gemNeed, nameOfGem);
-
-  const aspectsText = craftDraft.mode==="aspects"
-    ? craftDraft.aspects.map(a=>`${nameOfAspect(a.aspectId)} ← ${nameOfGem(a.carrierGemId)} x${a.embeddedStonesQty}`).join("; ")
-    : "—";
-
-  const matsText = summarizeMap(matNeed, nameOfMat);
-
-  $("craftSummary").innerHTML = `
-    <div>Материалы: <b>${esc(matsText||"—")}</b></div>
-    <div>Самоцветы: <b>${esc(gemsText||"—")}</b></div>
-    <div>Аспекты: <b>${esc(aspectsText||"—")}</b></div>
-    <hr>
-    <div>Стоимость камней: <b>${stonesCostGp.toFixed(2)} зм</b></div>
-    <div>Стоимость материалов: <b>${matsCostGp.toFixed(2)} зм</b></div>
-    <div>База: <b>${base.toFixed(2)} зм</b></div>
-    <div>Множитель оправы (${esc(primaryMat?.name||"—")}): <b>x${multiplier}</b></div>
-    <div>Итоговая цена продажи: <b>${final.toFixed(2)} зм</b></div>
-    <div>Время изготовления: <b>${formatTime(craftTimeMin)}</b></div>
-    <div>Сложность работы: <b>${workDC}</b></div>
-    ${ok ? "" : `<hr><div class="bad">Проблемы:<br>• ${problems.map(esc).join("<br>• ")}</div>`}
-  `;
-}
-
-function confirmCraft(){
-  if(!craftDraft) return;
-  recomputeCraft();
-  if($("craftConfirmBtn").disabled) return;
-
-  // compute needs again (use recompute logic but minimal)
-  const tierMap = tiersByGp();
-  const primaryMat = allMaterials().find(m=>m.id===craftDraft.primaryMaterialId) || allMaterials()[0];
-  const multiplier = primaryMat?.saleMultiplier ?? 1;
-
-  const matNeed = new Map();
-  for(const row of craftDraft.materialsBill){
-    const qty = Math.max(0, row.qty|0);
-    if(!row.materialId || qty===0) continue;
-    matNeed.set(row.materialId, (matNeed.get(row.materialId)||0) + qty);
-  }
-
-  const gemNeed = new Map();
-  if(craftDraft.mode==="gems"){
-    for(const row of craftDraft.gems){
-      const qty = Math.max(0, row.qty|0);
-      if(!row.gemId || qty===0) continue;
-      gemNeed.set(row.gemId, (gemNeed.get(row.gemId)||0) + qty);
-    }
-  }else{
-    for(const row of craftDraft.aspects){
-      const qty = Math.max(0, row.embeddedStonesQty|0);
-      if(!row.carrierGemId || qty===0) continue;
-      gemNeed.set(row.carrierGemId, (gemNeed.get(row.carrierGemId)||0) + qty);
-    }
-  }
-
-  // deduct inventory
-  for(const [mid, need] of matNeed.entries()){
-    state.inventory.materials[mid] = Math.max(0, (state.inventory.materials[mid]||0) - need);
-  }
-  for(const [gid, need] of gemNeed.entries()){
-    state.inventory.gems[gid] = Math.max(0, (state.inventory.gems[gid]||0) - need);
-  }
-
-  // compute final numbers
-  let stonesCostGp = 0;
-  let matsCostGp = 0;
-  let craftTimeMin = 0;
-
-  for(const [mid, need] of matNeed.entries()){
-    const mat = allMaterials().find(m=>m.id===mid);
-    matsCostGp += need * (mat?.unitCostGp || 0);
-  }
-
-  for(const [gid, need] of gemNeed.entries()){
-    const g = allGems().find(x=>x.id===gid);
-    if(g){
-      stonesCostGp += need * (g.tierGp || 0);
-      const tier = tierMap.get(g.tierGp);
-      craftTimeMin += need * (tier?.timePerStoneMin || 0);
-    }
-  }
-
-  const base = stonesCostGp + matsCostGp;
-  const final = base * multiplier;
-
-  const typeId = craftDraft.typeId || builtin.jewelryTypes?.[0]?.id || "";
-  const typeName = (builtin.jewelryTypes||[]).find(t=>t.id===typeId)?.name || "Украшение";
-
-  const name = (craftDraft.name || $("craftName").value || "").trim() || `${typeName}`;
-
-  const entry = {
-    id: uid("item"),
-    createdAt: nowIso(),
-    name,
-    typeId,
-    typeName,
-    primaryMaterialId: primaryMat?.id || "",
-    primaryMaterialName: primaryMat?.name || "—",
-    mode: craftDraft.mode,
-    finalPriceGp: final,
-    craftTimeMin,
-    workDC: primaryMat?.workDC || 0,
-    materialsBillText: summarizeMap(matNeed, nameOfMat),
-    gemsText: summarizeMap(gemNeed, nameOfGem),
-    aspectsText: craftDraft.mode==="aspects"
-      ? craftDraft.aspects.map(a=>`${nameOfAspect(a.aspectId)} ← ${nameOfGem(a.carrierGemId)} x${a.embeddedStonesQty}`).join("; ")
-      : "—"
-  };
-
-  state.journal.push(entry);
-  saveState();
-
-  closeCraft();
-  renderInventory();
-  renderJournal();
-}
-
-/* ---------- formatting ---------- */
-function formatCoins(c){
-  if(!c) return "—";
-  const parts=[];
-  if(c.cp) parts.push(`${c.cp} мм`);
-  if(c.sp) parts.push(`${c.sp} см`);
-  if(c.gp) parts.push(`${c.gp} зм`);
-  return parts.join(", ") || "—";
-}
-function formatTime(min){
-  min = Math.max(0, Math.floor(min||0));
-  if(min<60) return `${min} мин`;
-  const h = Math.floor(min/60);
-  const m = min%60;
-  if(h<24) return `${h} ч ${m} мин`;
-  const d = Math.floor(h/24);
-  const hh = h%24;
-  return `${d} д ${hh} ч`;
-}
-function summarizeMap(map, nameFn){
-  const parts=[];
-  for(const [id, qty] of map.entries()){
-    if(!qty) continue;
-    parts.push(`${nameFn(id)} x${qty}`);
-  }
-  return parts.join(", ");
-}
-
-function nameOfGem(id){ return allGems().find(x=>x.id===id)?.name || id; }
-function nameOfAspect(id){ return allAspects().find(x=>x.id===id)?.name || id; }
-function nameOfMat(id){ return allMaterials().find(x=>x.id===id)?.name || id; }
-
-function invGemText(id){
-  const have = state.inventory.gems[id]||0;
-  return `в наличии: ${have}`;
-}
-function invMatText(id){
-  const have = state.inventory.materials[id]||0;
-  return `в наличии: ${have}`;
-}
-
-function isCustomGem(id){ return (state.custom.gems||[]).some(x=>x.id===id); }
-function isCustomAspect(id){ return (state.custom.aspects||[]).some(x=>x.id===id); }
-
-/* ---------- IO ---------- */
-function exportState(){
-  const text = JSON.stringify(state, null, 2);
-  navigator.clipboard.writeText(text);
-  alert("Скопировано в буфер обмена.");
-}
-function importState(){
-  try{
-    const obj = JSON.parse($("importBox").value);
-    state = obj;
-    normalizeState();
+  root.querySelector("#st_reset").onclick = ()=>{
+    if(!confirm("Сбросить всё состояние приложения?")) return;
+    state = structuredClone(DEFAULT_STATE);
     saveState();
-    renderAll();
-    alert("Импорт выполнен.");
-  }catch(e){
-    alert("Ошибка: JSON не парсится.");
-  }
-}
-function resetState(){
-  if(!confirm("Сбросить состояние?")) return;
-  localStorage.removeItem(SAVE_KEY);
-  state = loadState();
-  normalizeState();
-  renderAll();
+    toast("Сброшено.");
+    render();
+  };
 }
 
-/* ---------- simple editors (минимально, чтобы ты мог дополнять) ---------- */
-let simpleCtx = null;
+/* =========================================================
+   15) HELPERS (HTML escape, file->dataURL)
+   ========================================================= */
 
-function openGemEditor(id=null){
-  const editing = id ? (state.custom.gems||[]).find(x=>x.id===id) : null;
-
-  simpleCtx = { type:"gem", id: id || uid("gemc"), editing: !!editing };
-  $("simpleTitle").textContent = editing ? "Редактировать самоцвет" : "Новый самоцвет (кастомный)";
-
-  const current = editing || {
-    id: simpleCtx.id,
-    name: "",
-    category: "Кастом",
-    tierGp: 10,
-    stonesPerAspect: 2,
-    aspectSlotsInItem: 1,
-    aspectIds: [],
-    rulesText: "",
-    icon: ""
-  };
-
-  $("simpleBody").innerHTML = `
-    <div class="row">
-      <div><label>Название</label><input id="ed_name" value="${esc(current.name)}"></div>
-      <div><label>Категория</label><input id="ed_cat" value="${esc(current.category)}"></div>
-    </div>
-    <div class="row">
-      <div><label>Tier (зм)</label><input id="ed_tier" type="number" min="1" value="${current.tierGp}"></div>
-      <div><label>stonesPerAspect</label><input id="ed_spa" type="number" min="0" value="${current.stonesPerAspect}"></div>
-    </div>
-    <div class="row">
-      <div><label>Лимит аспектов в изделии</label><input id="ed_slots" type="number" min="0" value="${current.aspectSlotsInItem||0}"></div>
-      <div><label>Иконка (путь)</label><input id="ed_icon" value="${esc(current.icon||"")}"></div>
-    </div>
-    <label>Описание/правила</label>
-    <textarea id="ed_rules" rows="5">${esc(current.rulesText||"")}</textarea>
-  `;
-
-  $("simpleSaveBtn").onclick = ()=>{
-    const obj = {
-      id: current.id,
-      name: $("ed_name").value.trim(),
-      category: $("ed_cat").value.trim() || "Кастом",
-      tierGp: Math.max(1, +$("ed_tier").value||10),
-      stonesPerAspect: Math.max(0, +$("ed_spa").value||0),
-      aspectSlotsInItem: Math.max(0, +$("ed_slots").value||0),
-      aspectIds: current.aspectIds || [],
-      rulesText: $("ed_rules").value.trim(),
-      icon: $("ed_icon").value.trim()
-    };
-    if(!obj.name) return alert("Название обязательно.");
-
-    // upsert
-    const idx = (state.custom.gems||[]).findIndex(x=>x.id===obj.id);
-    if(idx>=0) state.custom.gems[idx]=obj;
-    else state.custom.gems.push(obj);
-
-    // ensure inventory key
-    state.inventory.gems[obj.id] ??= 0;
-
-    saveState();
-    closeSimple();
-    renderAll();
-  };
-
-  $("simpleDeleteBtn").classList.toggle("hidden", !editing);
-  $("simpleDeleteBtn").onclick = ()=>{
-    if(!confirm("Удалить кастомный самоцвет?")) return;
-    state.custom.gems = (state.custom.gems||[]).filter(x=>x.id!==current.id);
-    delete state.inventory.gems[current.id];
-    saveState();
-    closeSimple();
-    renderAll();
-  };
-
-  $("simpleModal").classList.remove("hidden");
+function escapeHtml(str){
+  return String(str ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(String(r.result||""));
+    r.onerror = ()=> reject(new Error("file read error"));
+    r.readAsDataURL(file);
+  });
 }
 
-function openAspectEditor(id=null){
-  const editing = id ? (state.custom.aspects||[]).find(x=>x.id===id) : null;
-
-  simpleCtx = { type:"aspect", id: id || uid("aspc"), editing: !!editing };
-  $("simpleTitle").textContent = editing ? "Редактировать аспект" : "Новый аспект (кастомный)";
-
-  const current = editing || {
-    id: simpleCtx.id,
-    name: "",
-    category: "Кастом",
-    rulesText: "",
-    gemIds: [],
-    icon: ""
-  };
-
-  $("simpleBody").innerHTML = `
-    <div class="row">
-      <div><label>Название</label><input id="ed_name" value="${esc(current.name)}"></div>
-      <div><label>Категория</label><input id="ed_cat" value="${esc(current.category)}"></div>
-    </div>
-    <div class="row">
-      <div><label>Иконка (путь)</label><input id="ed_icon" value="${esc(current.icon||"")}"></div>
-    </div>
-    <label>Описание/правила</label>
-    <textarea id="ed_rules" rows="6">${esc(current.rulesText||"")}</textarea>
-  `;
-
-  $("simpleSaveBtn").onclick = ()=>{
-    const obj = {
-      id: current.id,
-      name: $("ed_name").value.trim(),
-      category: $("ed_cat").value.trim() || "Кастом",
-      rulesText: $("ed_rules").value.trim(),
-      gemIds: current.gemIds || [],
-      icon: $("ed_icon").value.trim()
-    };
-    if(!obj.name) return alert("Название обязательно.");
-
-    const idx = (state.custom.aspects||[]).findIndex(x=>x.id===obj.id);
-    if(idx>=0) state.custom.aspects[idx]=obj;
-    else state.custom.aspects.push(obj);
-
-    saveState();
-    closeSimple();
-    renderAll();
-  };
-
-  $("simpleDeleteBtn").classList.toggle("hidden", !editing);
-  $("simpleDeleteBtn").onclick = ()=>{
-    if(!confirm("Удалить кастомный аспект?")) return;
-    state.custom.aspects = (state.custom.aspects||[]).filter(x=>x.id!==current.id);
-    saveState();
-    closeSimple();
-    renderAll();
-  };
-
-  $("simpleModal").classList.remove("hidden");
-}
-
-function closeSimple(){ $("simpleModal").classList.add("hidden"); simpleCtx=null; }
-
-/* ---------- boot ---------- */
-init();
 </script>
 </body>
 </html>
