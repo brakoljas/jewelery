@@ -124,16 +124,19 @@
       margin:8px 0 12px;
     }
     h2{
-      margin:8px 0 6px;
-      font-size:18px;
-      font-weight:720;
-      letter-spacing:.2px;
+      h2{
+  margin:8px 0 6px;
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:.1px;
+}
+
     }
     h3{
       margin:16px 0 8px;
       font-size:14px;
       font-weight:700;
-      color:rgba(255,255,255,.86);
+      color: var(--text);
     }
     .sub{
       color:var(--muted);
@@ -148,19 +151,20 @@
     }
     .card{
       border:1px solid var(--stroke);
-      background: linear-gradient(180deg, rgba(24,29,43,.95), rgba(20,24,36,.95));
+      background: var(--card);
       border-radius: var(--r16);
       padding: var(--pad);
       box-shadow: var(--shadow);
       position:relative;
       overflow:hidden;
     }
-    .card::before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: radial-gradient(500px 220px at 10% 0%, rgba(201,162,77,.10), transparent 60%);
-      pointer-events:none;
-    }
+   .card::before{
+     content:"";
+     position:absolute; inset:-2px;
+     background: radial-gradient(520px 220px at 10% 0%, rgba(177,135,47,.06), transparent 60%);
+     pointer-events:none;
+   }
+
     .card > *{position:relative}
 
     .row{display:flex; gap:10px; align-items:center}
@@ -184,7 +188,7 @@
     .badge{
       display:inline-flex; align-items:center; gap:6px;
       border:1px solid var(--stroke);
-      background:rgba(0,0,0,.16);
+      background: rgba(255,255,255,.55);
       padding:5px 8px;
       border-radius:999px;
       font-size:12px;
@@ -231,28 +235,30 @@
     .btnRow{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
     button.btn{
       appearance:none;
-      border:1px solid rgba(201,162,77,.55);
-      background:rgba(201,162,77,.14);
-      color:var(--text);
+      border:1px solid var(--stroke2);
+      background: rgba(177,135,47,.10);
+      color: var(--text);
       padding:8px 10px;
       border-radius:12px;
       cursor:pointer;
       font-size:13px;
       font-weight:650;
     }
-    button.btn:hover{background:rgba(201,162,77,.18)}
+    bubutton.btn:hover{background:rgba(177,135,47,.14)}
     button.btn.secondary{
       border-color:var(--stroke2);
       background:rgba(255,255,255,.04);
       color:var(--text);
       font-weight:600;
     }
-    button.btn.secondary:hover{background:rgba(255,255,255,.06)}
-    button.btn.danger{
-      border-color:rgba(226,85,85,.45);
-      background:rgba(226,85,85,.10);
-    }
-    button.btn.danger:hover{background:rgba(226,85,85,.14)}
+   button.btn.secondary{
+     border-color:var(--stroke);
+     background: rgba(255,255,255,.55);
+     color:var(--text);
+     font-weight:600;
+   }
+    button.btn.secondary:hover{background: rgba(255,255,255,.70)}
+
     button.btn.good{
       border-color:rgba(81,194,127,.55);
       background:rgba(81,194,127,.12);
@@ -282,13 +288,13 @@
       padding:10px 10px;
       border-radius:12px;
       border:1px solid var(--stroke);
-      background:rgba(0,0,0,.22);
+      background: rgba(255,255,255,.65);
       color:var(--text);
       outline:none;
       font-size:13px;
     }
     textarea{min-height:140px; font-family:var(--mono); font-size:12px}
-    input::placeholder{color:rgba(255,255,255,.35)}
+    input::placeholder{color:rgba(18,18,18,.35)}
     .checkbox{
       display:flex; align-items:center; gap:8px;
       color:var(--muted);
@@ -311,7 +317,7 @@
     }
     .panel{
       border:1px solid var(--stroke);
-      background:rgba(20,24,36,.55);
+      background: var(--panel);
       border-radius: var(--r16);
       padding: var(--pad);
       box-shadow: var(--shadow);
@@ -337,7 +343,7 @@
       color:var(--muted2);
       text-transform:uppercase;
       letter-spacing:.14em;
-      background:rgba(255,255,255,.03);
+      background: rgba(20,20,20,.03);
     }
     .miniTable tr:last-child td{border-bottom:none}
     .right{text-align:right}
@@ -2395,4 +2401,5 @@ function fileToDataURL(file){
 </script>
 </body>
 </html>
+
 
