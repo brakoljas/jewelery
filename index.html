@@ -66,10 +66,10 @@
     .brand{
       display:flex; align-items:center; gap:10px;
       padding:8px 10px;
-      border:1px solid var(--stroke);
-      background:rgba(20,24,36,.7);
-      border-radius:999px;
-      box-shadow: var(--shadow);
+      border:1px solid rgba(20,17,14,.18);
+      background:rgba(255,255,255,.28);
+      box-shadow:none;
+      color:rgba(20,17,14,.78);
     }
     .brand .dot{
       width:10px; height:10px; border-radius:50%;
@@ -85,20 +85,27 @@
       display:flex; gap:8px; flex-wrap:wrap;
     }
     .tab{
-      appearance:none; border:1px solid var(--stroke);
-      background:rgba(20,24,36,.65);
-      color:var(--text);
-      padding:8px 10px;
-      border-radius:999px;
-      cursor:pointer;
-      font-size:13px;
-      box-shadow: 0 10px 22px rgba(0,0,0,.22);
-    }
-    .tab.active{
-      border-color:rgba(201,162,77,.55);
-      color:var(--accent);
-      background:rgba(201,162,77,.10);
-    }
+  appearance:none;
+  border:1px solid rgba(20,17,14,.18);          /* тонкая “чернильная” обводка */
+  background:rgba(255,255,255,.35);             /* светлая плашка, не темнит */
+  color:rgba(20,17,14,.88);                      /* тёмный текст */
+  padding:8px 10px;
+  border-radius:999px;
+  cursor:pointer;
+  font-size:13px;
+  box-shadow:none;                               /* убираем тяжёлую тень */
+}
+
+.tab:hover{
+  background:rgba(255,255,255,.55);
+  border-color:rgba(20,17,14,.28);
+}
+
+.tab.active{
+  border-color:rgba(201,162,77,.65);            /* твой золотой акцент */
+  background:rgba(201,162,77,.18);              /* активная — “подсвеченная” */
+  color:rgba(20,17,14,.92);                      /* активная не должна быть золотым текстом на бежевом */
+}
     .spacer{flex:1}
     .pill{
       font-size:12px;
@@ -108,8 +115,8 @@
       padding:8px 10px;
       border-radius:999px;
       display:flex; gap:8px; align-items:center;
-    }
-    .pill strong{color:var(--text); font-weight:650}
+   }
+.pill strong{ color:rgba(20,17,14,.92); }
     main{
       max-width:1200px;
       margin:0 auto;
@@ -2401,5 +2408,6 @@ function fileToDataURL(file){
 </script>
 </body>
 </html>
+
 
 
